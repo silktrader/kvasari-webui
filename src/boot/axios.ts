@@ -31,7 +31,7 @@ api.interceptors.request.use(
   function (config) {
     const authStore = useAuthStore();
     if (authStore.user) {
-      config.headers.Authorization = `Bearer: ${authStore.user.Id}`;
+      config.headers.Authorization = `Bearer ${authStore.user.Id}`;
     }
     return config;
   },

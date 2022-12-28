@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { api } from 'boot/axios';
 import { useAuthStore } from 'stores/auth-store';
 
-interface UploadedArtwork {
+export interface UploadedArtwork {
   Id: string;
   Title?: string;
   Format: string;
@@ -21,29 +21,29 @@ interface UserRelation {
 export const useUserStore = defineStore('user', () => {
   const authStore = useAuthStore();
 
-  const uploads = ref<UploadedArtwork[]>([]);
+  const Uploads = ref<UploadedArtwork[]>([]);
   const followers = ref<UserRelation[]>([]);
   const followed = ref<UserRelation[]>([]);
 
   async function clearUploads() {
-    uploads.value = [];
+    Uploads.value = [];
   }
 
-  async function updateProfile() {
-      const response = await api.get<{
-        Artworks: UploadedArtwork[];
-        Followers: UserRelation[];
-        FollowedUsers: UserRelation[];
-      }>(`/users/${authStore.user?.Alias}/profile`);
+  async function UpdateProfile() {
+    const response = await api.get<{
+      Artworks: UploadedArtwork[];
+      Followers: UserRelation[];
+      FollowedUsers: UserRelation[];
+    }>(`/users/${authStore.user?.Alias}/profile`);
 
-      uploads.value.push(...response.data.Artworks);
+    Uploads.value.push(...response.data.Artworks);
   }
 
   return {
-    uploads,
+    Uploads,
     followers,
     followed,
-    updateProfile,
+    UpdateProfile,
     clearUploads,
   };
 });

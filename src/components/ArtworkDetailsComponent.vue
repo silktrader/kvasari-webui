@@ -1,16 +1,16 @@
 <template>
 
   <section class='artwork-image'>
-    <img id='image' :src='artwork.PictureUrl' :alt='artwork.Title' class='shadow-20'>
+    <!--the id serves as a scrolling target-->
+    <img id='image' :src='imgUrl' :alt='artwork.Title' class='shadow-20'>
 
     <div class='caption'>
       <q-btn square flat class='caption-box info-button' :class='captionBox' @click='scrollToDetails'>
         <div class='caption-box-label'>i</div>
       </q-btn>
       <div class='caption-text' :class='captionTextClass'>
-        <span>{{ artwork.Title }}</span>
-        <!--        tk turn this into a link-->
-        <!--        <span class='author-name' v-show='hasAuthorName()'>, by {{ artwork.AuthorName }}</span>-->
+        <span>{{ artwork.Title || 'Untitled' }}</span>
+        <span class='author-name' v-show='artwork.AuthorName'>, by {{ artwork.AuthorName }}</span>
       </div>
       <div style='flex-grow: 10'></div>
     </div>
@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang='ts'>
-import { computed, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { api } from 'boot/axios';
 import { date, scroll } from 'quasar';
 import utilities from 'src/utilities/utilities';
@@ -93,6 +93,7 @@ const props = defineProps<{ artworkId: string }>();
 
 let artwork: Readonly<Artwork>;
 
+const imgUrl = ref<string>('');
 const detailsVisible = ref<boolean>(false);
 const { getScrollTarget, setVerticalScrollPosition } = scroll;
 
@@ -125,6 +126,14 @@ const captionTextClass = computed(() => detailsVisible.value ? 'caption-text-hid
 
 // a valid target to scroll to
 const imageTarget = getScrollTarget(document.getElementById('image') as HTMLElement);
+
+onMounted(async () => {
+  imgUrl.value = URL.createObjectURL(await api.get(`http://localhost:3000/artworks/${props.artworkId}/image`, { responseType: 'blob' }).then(response => response.data));
+});
+
+onBeforeUnmount(() => {
+  URL.revokeObjectURL(imgUrl.value);
+});
 
 function onShowDetails(e: { isIntersecting: boolean; }): void {
   detailsVisible.value = e.isIntersecting;
@@ -164,6 +173,11 @@ function formatRelativeDate(date: Date): string {
   width: 100%;
   margin-left: auto;
   margin-right: auto;
+}
+
+#image {
+  object-fit: contain;
+  height: 100vh;
 }
 
 // caption
