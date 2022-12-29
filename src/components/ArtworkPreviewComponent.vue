@@ -26,8 +26,8 @@
 
 <script setup lang='ts'>
 
-import { UploadedArtwork, useUserStore } from 'stores/user-store';
-import { computed, onBeforeUnmount, onMounted, onUpdated, PropType, ref } from 'vue';
+import { UploadedArtwork } from 'stores/user-store';
+import { computed, onBeforeUnmount, onMounted, PropType, ref } from 'vue';
 import utilities from 'src/utilities/utilities';
 import { useRouter } from 'vue-router';
 import { api } from 'boot/axios';
@@ -99,7 +99,7 @@ img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  opacity: 0%;
+  opacity: 0;
   transition: opacity 0.5s ease-in-out;
   -moz-transition: opacity 0.5s ease-in-out;
   -webkit-transition: opacity 0.5s ease-in-out;

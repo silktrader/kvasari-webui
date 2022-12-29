@@ -5,7 +5,7 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') },
+      { path: '', redirect: { name: 'profile' } },
       {
         path: '/authentication',
         name: 'authentication',
@@ -13,6 +13,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: '/profile',
+        name: 'profile',
         component: () => import('pages/ProfilePage.vue'),
         meta: {
           authenticated: true,
