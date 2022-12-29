@@ -1,7 +1,9 @@
 <template>
   <q-page class='profile-container'>
 
-    <header>
+    <div class='profile-header'>
+      <div class='header-cover'></div>
+      <div class='header-cover-gradient'></div>
       <section class='user-details'>
         <q-avatar size='120px'>
           <img src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'
@@ -33,7 +35,7 @@
         <span><b>{{ userStore.followed.length }}</b> Followed</span>
         <span><b>{{ userStore.Uploads.length }}</b> Artworks</span>
       </section>
-    </header>
+    </div>
 
     <div>
       <div class='uploads-previews'>
@@ -176,12 +178,33 @@ $border-radius: 3px;
 }
 
 // header
-header {
+.profile-header {
+  position: relative;
   display: flex;
   flex-direction: row;
   width: 100%;
-  background-image: url("http://localhost:3000/static/background.jpg");
   align-items: flex-end;
+}
+
+.header-cover {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background-image: url("http://localhost:3000/static/user_cover.jpg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: blur(1px);
+}
+
+.header-cover-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  background: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, .03) 8%, rgba(0, 0, 0, .11) 21%, rgba(0, 0, 0, .61) 78%, rgba(0, 0, 0, .7) 95%, rgba(0, 0, 0, .7))
 }
 
 .user-details {
@@ -190,6 +213,7 @@ header {
   gap: 16px;
   padding: 16px;
   align-items: center;
+  z-index: 10;
 }
 
 .user-avatar {
@@ -219,6 +243,7 @@ header {
   gap: 32px;
   font-size: small;
   padding: 16px;
+  z-index: 10;
 }
 
 // uploads

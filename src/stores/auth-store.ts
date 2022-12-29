@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
 import { ref, watch } from 'vue';
 
-interface User {
+export interface User {
   readonly Id: string;
   readonly Alias: string;
   readonly Name: string;

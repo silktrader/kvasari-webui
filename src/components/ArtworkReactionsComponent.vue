@@ -8,14 +8,11 @@
       class='reaction-button'
     >
       <template v-slot:label>
-        <div class='row items-center no-wrap'>
-          <q-icon v-if='!selectedReaction' left name='add_reaction' />
-          <q-avatar v-else class='reaction-button-label'>
-            <img src='http://localhost:3000/static/thumb_up.png' />
+        <div class='reaction-label'>
+          <q-icon v-if='!selectedReaction' left name='add_reaction' size='xl' />
+          <q-avatar v-else class='reaction-label-button'>
+            <img :src='`${baseUrl}/static/${reactionIcons.get(selectedReaction)}.png`' />
           </q-avatar>
-          <div class='text-center'>
-            React
-          </div>
         </div>
       </template>
 
@@ -23,7 +20,7 @@
 
         <q-item clickable v-close-popup @click='removeReaction'>
           <q-item-section avatar>
-            <img class='reaction-icon' src='http://localhost:3000/static/no_face.png' />
+            <img class='reaction-icon' :src='`${baseUrl}/static/no_face.png`' alt='No Reaction' />
           </q-item-section>
           <q-item-section>
             <q-item-label>None</q-item-label>
@@ -32,7 +29,7 @@
 
         <q-item clickable v-close-popup @click='addReaction(ReactionType.Like)'>
           <q-item-section avatar>
-            <img class='reaction-icon' src='http://localhost:3000/static/thumb_up.png' />
+            <img class='reaction-icon' :src='`${baseUrl}/static/thumb_up.png`' alt='Like' />
           </q-item-section>
           <q-item-section>
             <q-item-label>Like</q-item-label>
@@ -41,7 +38,7 @@
 
         <q-item clickable v-close-popup @click='addReaction(ReactionType.Perplexed)'>
           <q-item-section avatar>
-            <img class='reaction-icon' src='http://localhost:3000/static/monocle.png' />
+            <img class='reaction-icon' :src='`${baseUrl}/static/monocle.png`' alt='Perplexed' />
           </q-item-section>
           <q-item-section>
             <q-item-label>Perplexed</q-item-label>
@@ -54,14 +51,11 @@
     <section class='reactions-breakdown'>
 
       <div class='reaction-type' v-for='[reactionType, reactions] in categorisedReactions' :key='reactionType'>
-        <img class='reaction-icon' :src='`http://localhost:3000/static/${reactionIcons.get(reactionType)}.png`' />
+        <img class='reaction-icon' :src='`${baseUrl}/static/${reactionIcons.get(reactionType)}.png`' />
         <q-badge color='secondary' class='reaction-badge'>{{ reactions.length }}</q-badge>
       </div>
 
     </section>
-
-    <!--    <img class='twa-3x twa-face-with-monocle' />-->
-
 
   </section>
 
@@ -69,9 +63,9 @@
 
 <script setup lang='ts'>
 
-import { computed, ref, watch } from 'vue';
-import { api } from 'boot/axios';
-import { useAuthStore } from 'stores/auth-store';
+import { computed, ref } from 'vue';
+import { api, baseUrl } from 'boot/axios';
+import { useAuthStore, User } from 'stores/auth-store';
 import { useQuasar } from 'quasar';
 
 enum ReactionType {
@@ -92,8 +86,8 @@ const reactionIcons = new Map([
 ]);
 
 const props = defineProps<{ artworkId: string }>();
-const authStore = useAuthStore();
 const q = useQuasar();
+const user = <User>useAuthStore().user;
 
 const selectedReaction = ref<ReactionType>();
 const reactions = ref<ReadonlyArray<Reaction>>([]);
@@ -103,11 +97,13 @@ const getReactions = async () => {
   reactions.value = response.data;
 
   // find the user's reaction and display it
-  const userReaction = reactions.value.find(reaction => reaction.AuthorAlias == authStore.user.Alias);
+  const userReaction = reactions.value.find(reaction => reaction.AuthorAlias == user.Alias);
   if (userReaction) {
     selectedReaction.value = userReaction.Reaction;
   }
 };
+
+console.log(process.env.baseUrl);
 
 await getReactions();
 
@@ -115,14 +111,14 @@ await getReactions();
 async function addReaction(type: ReactionType): Promise<void> {
 
   try {
-    const response = await api.put<{ Status: string, Date: Date }>(`/artworks/${props.artworkId}/reactions/${authStore.user.Alias}`, {
+    const response = await api.put<{ Status: string, Date: Date }>(`/artworks/${props.artworkId}/reactions/${user.Alias}`, {
       Reaction: type
     });
 
     // ensure proper removal of existing user reaction
-    reactions.value = [...reactions.value.filter(r => r.AuthorAlias !== authStore.user.Alias), {
-      AuthorAlias: authStore.user.Alias,
-      AuthorName: authStore.user.Name,
+    reactions.value = [...reactions.value.filter(r => r.AuthorAlias !== user.Alias), {
+      AuthorAlias: user.Alias,
+      AuthorName: user.Name,
       Reaction: type,
       Date: response.data.Date
     }];
@@ -138,17 +134,15 @@ async function addReaction(type: ReactionType): Promise<void> {
 }
 
 async function removeReaction(): Promise<void> {
-
   try {
-    await api.delete(`/artworks/${props.artworkId}/reactions/${authStore.user.Alias}`);
-    reactions.value = [...reactions.value.filter(r => r.AuthorAlias !== authStore.user.Alias)];
+    await api.delete(`/artworks/${props.artworkId}/reactions/${user.Alias}`);
+    reactions.value = [...reactions.value.filter(r => r.AuthorAlias !== user.Alias)];
     q.notify({ type: 'positive', message: 'Reaction removed' });
     selectedReaction.value = undefined;
   } catch (e) {
     q.notify({ type: 'negative', message: 'Couldn\'t record your reaction' });
-    console.log(e);
+    console.error(e);
   }
-
 }
 
 // automatically sort reactions in maps for easier display
@@ -199,8 +193,12 @@ const categorisedReactions = computed(() => {
   padding-bottom: 1rem;
 }
 
-.reaction-button-label {
-  padding-right: 1rem;
+.reaction-label {
+  padding: 8px;
+}
+
+.reaction-label-button {
+  //padding-right: 1rem;
 }
 
 .reaction-badge {

@@ -31,7 +31,7 @@
           <q-btn-dropdown rounded flat dense no-icon-animation dropdown-icon='more_vert' v-if='canEdit(comment)'>
             <q-list>
 
-              <q-item clickable v-close-popup @click='onItemClick'>
+              <q-item clickable v-close-popup disable>
                 <q-item-section side>
                   <q-icon name='edit' />
                 </q-item-section>
@@ -40,7 +40,7 @@
                 </q-item-section>
               </q-item>
 
-              <q-item clickable v-close-popup @click='onItemClick'>
+              <q-item clickable v-close-popup @click='onDeleteComment(comment)'>
                 <q-item-section side>
                   <q-icon name='delete' />
                 </q-item-section>
@@ -65,9 +65,10 @@
 <script setup lang='ts'>
 
 import { ref } from 'vue';
-import { api } from 'boot/axios';
-import { useAuthStore } from 'stores/auth-store';
+import { api, BadRequestError, InternalServerError } from 'boot/axios';
+import { useAuthStore, User } from 'stores/auth-store';
 import utilities from './../utilities/utilities';
+import { useQuasar } from 'quasar';
 
 interface Comment {
   Id: string;
@@ -78,9 +79,9 @@ interface Comment {
 }
 
 const props = defineProps<{ artworkId: string }>();
-const authStore = useAuthStore();
+const user = <User>useAuthStore().user;
+const q = useQuasar();
 
-const now = new Date();
 const comments = ref<Comment[]>([]);
 let newComment = ref<string>('');
 
@@ -104,20 +105,41 @@ async function onNewComment(): Promise<void> {
     const response = await api.post<{ Id: string; Date: Date }>(`/artworks/${props.artworkId}/comments`, { Comment: newComment.value });
     comments.value = [...comments.value, {
       Id: response.data.Id,
-      AuthorAlias: authStore.user.Alias,
-      AuthorName: authStore.user.Name,
+      AuthorAlias: user.Alias,
+      AuthorName: user.Name,
       Comment: newComment.value,
       Date: response.data.Date
     }];
   } catch (e) {
-    console.log(e);
+    console.error(e);
   } finally {
     newComment.value = '';
   }
 }
 
 function canEdit(comment: Comment): boolean {
-  return comment.AuthorAlias === authStore.user.Alias;
+  return comment.AuthorAlias === user.Alias;
+}
+
+async function onDeleteComment(comment: Comment): Promise<void> {
+  try {
+    await api.delete(`/artworks/${props.artworkId}/comments/${comment.Id}`);
+    comments.value = [...comments.value.filter(c => c.Id !== comment.Id)];
+    q.notify({ type: 'positive', message: 'Comment deleted' });
+  } catch (e) {
+    if (e instanceof BadRequestError) q.notify({
+      type: 'negative',
+      message: `Couldn\'t delete the comment: </br>${e.Message}`,
+      html: true
+    });
+    else {
+      q.notify({
+        type: 'negative',
+        message: 'Couldn\'t delete the comment.'
+      });
+    }
+    console.error(e);
+  }
 }
 
 </script>

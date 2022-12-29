@@ -16,6 +16,8 @@ declare module '@vue/runtime-core' {
   }
 }
 
+export const baseUrl = <string>process.env.baseUrl;
+
 // Be careful when using SSR for cross-request state pollution
 // due to creating a Singleton instance here;
 // If any client changes this (global) instance, it might be a
@@ -23,7 +25,7 @@ declare module '@vue/runtime-core' {
 // "export default () => {}" function below (which runs individually
 // for each client)
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: baseUrl,
   // withCredentials: true,
 });
 // tk export base url
