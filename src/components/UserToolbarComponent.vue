@@ -1,18 +1,12 @@
 <template>
 
-  <q-btn push v-if='authStore.user?.Id' color='red' label='Me'>
+  <q-btn push v-if='authStore.user' color='red' label='Me'>
     <q-menu>
       <div class='user-menu'>
 
         <div class='user-menu-column'>
           <q-list padding class='text-primary'>
-            <q-item
-              clickable
-              v-ripple
-              :active="link === 'inbox'"
-              @click="link = 'inbox'"
-              active-class='my-menu-link'
-            >
+            <q-item clickable v-ripple disable>
               <q-item-section avatar>
                 <q-icon name='account_circle' />
               </q-item-section>
@@ -69,8 +63,8 @@
           </q-avatar>
 
           <section class='user-name-alias'>
-            <span>{{ authStore.user.Name }}</span>
-            <span class='artist-alias'>@{{ authStore.user.Alias }}</span>
+            <span>{{ authStore.user?.Name }}</span>
+            <span class='artist-alias'>@{{ authStore.user?.Alias }}</span>
           </section>
 
           <q-btn color='primary' label='Sign Out' v-close-popup @click='signOut' />
@@ -95,7 +89,7 @@ function signOut(): void {
   authStore.SignOut();
   quasar.notify({
     type: 'positive',
-    message: `Signed out. Until soon!`,
+    message: 'Signed out. Until soon!',
     html: true
   });
   router.push('/authentication');

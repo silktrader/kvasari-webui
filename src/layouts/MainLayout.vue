@@ -1,10 +1,12 @@
 <template>
   <q-layout view='hHh lpR fFf'>
 
-    <header>
+    <header v-if='user'>
 
-      <router-link to='/stream' class='link' v-if='authStore.user'>Stream</router-link>
-      <router-link to='/profile' class='link' v-if='authStore.user'>Profile</router-link>
+      <search-component></search-component>
+
+      <router-link to='/stream' class='link'>Stream</router-link>
+      <router-link to='/me' class='link'>Profile</router-link>
 
       <div class='spacer'></div>
 
@@ -22,10 +24,12 @@
 
 import UserToolbarComponent from 'components/UserToolbarComponent.vue';
 import { useAuthStore } from 'stores/auth-store';
+import SearchComponent from 'components/SearchComponent.vue';
 
-const authStore = useAuthStore();
+const user = useAuthStore().user;
 
 </script>
+
 
 <style scoped lang='scss'>
 

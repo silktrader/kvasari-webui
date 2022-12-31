@@ -51,7 +51,7 @@ onBeforeUnmount(() => {
 });
 
 const imgAlt = computed(() => {
-  return `${props.artwork?.Title || 'Untitled'}, by ${authStore.user?.Name}`;
+  return `${props.artwork?.Title || 'Untitled'}, by ${authStore.userAlias?.Name}`;
 });
 
 function navigateTo(artworkId: string): void {

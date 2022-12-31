@@ -12,8 +12,8 @@
 
         <section class='user-name-alias'>
           <div class='name'>
-            <span>{{ authStore.user.Name }}</span>
-            <q-btn round outline icon='las la-user-edit'>
+            <span>{{ user.Name }}</span>
+            <q-btn round outline icon='las la-user-edit' v-if='isAuthUser'>
               <q-popup-edit v-model='userName' :cover='false' :offset='[0, 10]' v-slot='scope' buttons
                             :validate='v => v.length > 6' @save='saveUserName'>
                 <q-input color='accent' v-model='scope.value' dense autofocus counter @keyup.enter='scope.set' :rules="[
@@ -26,20 +26,36 @@
               </q-popup-edit>
             </q-btn>
           </div>
-          <span class='alias'>@{{ authStore.user.Alias }}</span>
+          <span class='alias'>@{{ user.Alias }}</span>
         </section>
       </section>
 
       <section class='user-stats'>
-        <span><b>{{ userStore.followers.length }}</b> Followers</span>
-        <span><b>{{ userStore.followed.length }}</b> Followed</span>
-        <span><b>{{ userStore.Uploads.length }}</b> Artworks</span>
+        <q-btn flat no-caps><span class='user-stat-label'><b>{{ user.Followers }}</b> Followers</span></q-btn>
+        <q-btn flat no-caps><span class='user-stat-label'><b>{{ user.Following }}</b> Following</span></q-btn>
+        <q-btn flat no-caps><span class='user-stat-label'><b>{{ user.Artworks }}</b> Artworks</span></q-btn>
+        <span style='flex-grow: 3'></span>
+        <q-btn flat no-caps dense>
+          <span class='user-stat-label'>
+            <b>{{ user.Comments }}</b>
+            <q-icon name='comment' />
+          </span>
+        </q-btn>
+
+        <q-btn flat no-caps dense>
+          <span class='user-stat-label'>
+            <b>{{ user.Reactions }}</b>
+            <q-icon name='recommend' />
+          </span>
+        </q-btn>
+        <span style='flex-grow: 1'></span>
+
       </section>
     </div>
 
     <div>
       <div class='uploads-previews'>
-        <div>
+        <div v-if='isAuthUser'>
           <q-uploader
             flat
             label='Upload New Artwork'
@@ -56,7 +72,7 @@
             @failed='onFailedUpload'
           />
         </div>
-        <artwork-preview-component v-for='artwork in userStore.Uploads' :key='artwork.Id'
+        <artwork-preview-component v-for='artwork in userStore.uploads' :key='artwork.Id'
                                    :artwork='artwork'></artwork-preview-component>
         <div class='spacer'></div>
 
@@ -70,13 +86,16 @@
 
 
 <script setup lang='ts'>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useAuthStore } from 'stores/auth-store';
 import { useUserStore } from 'stores/user-store';
 import { BadRequestError } from 'boot/axios';
 import ArtworkPreviewComponent from 'components/ArtworkPreviewComponent.vue';
+import { useRoute } from 'vue-router';
+import { storeToRefs } from 'pinia';
 
+const route = useRoute();
 const userStore = useUserStore();
 const authStore = useAuthStore();
 const q = useQuasar();
@@ -86,11 +105,27 @@ const acceptableFormats: ReadonlyArray<string> = ['.jpg', '.jpeg', '.png', '.web
 
 const userName = ref<string>();
 
+const { user } = storeToRefs(userStore);
+
+const isAuthUser = computed(() => userStore.user.Alias == authStore.user?.Alias);
+
+watch(
+  () => route.params,
+  (toParams, previousParams) => {
+    // userStore.setUserAlias(toParams.alias ?? auth)
+    if (toParams.alias) {
+      userStore.setUser(toParams.alias as string);
+    } else {
+      userStore.setUser(authStore.user?.Alias ?? ''); // tk
+    }
+  },
+  { immediate: true }
+);
+
 onMounted(async () => {
-  userName.value = authStore.user?.Name;
   try {
-    await userStore.clearUploads();
-    await userStore.UpdateProfile();
+    //await userStore.clearUploads();
+    //await userStore.UpdateProfile();
   } catch (error) {
     if (error instanceof BadRequestError) {
       q.notify({
@@ -162,7 +197,6 @@ function onFailedUpload(info: { xhr: { response: string } }): void {
     message: `A problem arose while uploading the image. <br/>${responseText?.Message ?? responseText?.Error}`,
     html: true
   });
-
 }
 
 </script>
@@ -240,10 +274,16 @@ $border-radius: 3px;
 
 .user-stats {
   display: flex;
-  gap: 32px;
+  gap: 16px;
   font-size: small;
   padding: 16px;
   z-index: 10;
+  flex-grow: 2;
+}
+
+.user-stat-label {
+  display: flex;
+  gap: 8px;
 }
 
 // uploads

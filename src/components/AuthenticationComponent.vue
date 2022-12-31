@@ -21,11 +21,11 @@
           class='q-gutter-md signin-form'
         >
           <q-input
-            filled
             v-model='userAlias'
             class='credentials-input'
-            label='User Alias'
+            label='Alias'
             lazy-rules
+            standout
             :rules="[ val => val && val.length > 5 || 'Invalid alias']">
             <template v-slot:prepend>
               <q-icon name='account_circle' />
@@ -33,12 +33,12 @@
           </q-input>
 
           <q-input
-            filled
             v-model='userPassword'
             class='credentials-input'
-            label='User Password'
+            label='Password'
             :type="showPassword ? 'password' : 'text'"
             lazy-rules
+            standout
             :rules="[ val => val && val.length > 8 || 'Invalid password']">
             <template v-slot:append>
               <q-icon
@@ -69,22 +69,26 @@
           class='signin-form'
         >
           <q-input
-            filled
             v-model='regData.Alias'
             class='credentials-input'
             label='Alias'
+            clearable
+            standout
+            bottom-slots
             lazy-rules
-            :rules="[ val => val && val.length > 5 || 'Invalid alias']">
+            :rules="[ val => !!val && val.length > 5 || 'Invalid alias']">
             <template v-slot:prepend>
               <q-icon name='account_circle' />
             </template>
           </q-input>
 
           <q-input
-            filled
             v-model='regData.Name'
             class='credentials-input'
             label='Name'
+            clearable
+            standout
+            bottom-slots
             lazy-rules
             :rules="[ val => val && val.length > 5 || 'Invalid name']"
           >
@@ -94,11 +98,13 @@
           </q-input>
 
           <q-input
-            filled
             v-model='regData.Email'
             class='credentials-input'
             label='Email'
             type='email'
+            clearable
+            standout
+            bottom-slots
             lazy-rules
             :rules="[ val => !!val && val.length > 4 || 'Invalid email']"
           >
@@ -108,11 +114,12 @@
           </q-input>
 
           <q-input
-            filled
             v-model='regData.Password'
             class='credentials-input'
             label='Password'
             :type="showRegPassword ? 'password' : 'text'"
+            standout
+            bottom-slots
             lazy-rules
             :rules="[ val => val && val.length > 8 || 'Invalid password']">
             <template v-slot:prepend>
@@ -238,7 +245,7 @@ function onRegReset() {
 }
 
 .credentials-input {
-  width: 24ch;
+  width: 30ch;
 }
 
 .auth-panel {

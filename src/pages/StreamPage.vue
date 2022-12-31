@@ -47,7 +47,7 @@ const authStore = useAuthStore();
 onMounted(() => {
   const now = new Date().toISOString();
   streamStore.clearStream();
-  if (authStore.user) streamStore.updateStream(authStore.user.Alias, now, now);
+  if (authStore.userAlias) streamStore.updateStream(authStore.userAlias.Alias, now, now);
 });
 
 function timeAgo(datetime: Date): number {

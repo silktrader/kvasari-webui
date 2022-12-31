@@ -65,7 +65,7 @@
 <script setup lang='ts'>
 
 import { ref } from 'vue';
-import { api, BadRequestError, InternalServerError } from 'boot/axios';
+import { api, BadRequestError } from 'boot/axios';
 import { useAuthStore, User } from 'stores/auth-store';
 import utilities from './../utilities/utilities';
 import { useQuasar } from 'quasar';
@@ -79,7 +79,7 @@ interface Comment {
 }
 
 const props = defineProps<{ artworkId: string }>();
-const user = <User>useAuthStore().user;
+const user = <User>useAuthStore().userAlias;
 const q = useQuasar();
 
 const comments = ref<Comment[]>([]);

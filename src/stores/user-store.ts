@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { reactive, readonly, ref } from 'vue';
 import { api } from 'boot/axios';
 import { useAuthStore } from 'stores/auth-store';
 
@@ -12,21 +12,46 @@ export interface UploadedArtwork {
   Reactions: number;
 }
 
-interface UserRelation {
+export interface User {
   Alias: string;
   Name: string;
+}
+
+interface UserRelation extends User {
   Date: Date;
 }
 
-export const useUserStore = defineStore('user', () => {
-  const authStore = useAuthStore();
+interface UserDetails extends User {
+  Email: string;
+  Created: Date;
+}
 
-  const Uploads = ref<UploadedArtwork[]>([]);
+export const useUserStore = defineStore('user', () => {
+  const user = reactive<UserDetails>({} as UserDetails);
+  const uploads = ref<UploadedArtwork[]>([]);
   const followers = ref<UserRelation[]>([]);
   const followed = ref<UserRelation[]>([]);
 
+  async function setUser(userAlias: string) {
+    const response = await api.get<{
+      Name: string;
+      Email: string;
+      Followers: number;
+      Following: number;
+      Artworks: number;
+      Comments: number;
+      Reactions: number;
+      Created: Date;
+      Updated: Date;
+    }>(`/users/${userAlias}`);
+
+    // can't assign new object, must use current reference
+    Object.assign(user, response.data);
+    user.Alias = userAlias;
+  }
+
   async function clearUploads() {
-    Uploads.value = [];
+    uploads.value = [];
   }
 
   async function UpdateProfile() {
@@ -34,15 +59,17 @@ export const useUserStore = defineStore('user', () => {
       Artworks: UploadedArtwork[];
       Followers: UserRelation[];
       FollowedUsers: UserRelation[];
-    }>(`/users/${authStore.user?.Alias}/profile`);
+    }>(`/users/${user.Alias}/profile`);
 
-    Uploads.value.push(...response.data.Artworks);
+    uploads.value.push(...response.data.Artworks);
   }
 
   return {
-    Uploads,
+    user: readonly(user),
+    uploads: readonly(uploads),
     followers,
     followed,
+    setUser,
     UpdateProfile,
     clearUploads,
   };

@@ -87,7 +87,7 @@ const reactionIcons = new Map([
 
 const props = defineProps<{ artworkId: string }>();
 const q = useQuasar();
-const user = <User>useAuthStore().user;
+const user = <User>useAuthStore().userAlias;
 
 const selectedReaction = ref<ReactionType>();
 const reactions = ref<ReadonlyArray<Reaction>>([]);

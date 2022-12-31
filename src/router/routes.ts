@@ -1,4 +1,5 @@
 import { RouteRecordRaw } from 'vue-router';
+import ProfilePage from 'pages/ProfilePage.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -12,9 +13,16 @@ const routes: RouteRecordRaw[] = [
         component: () => import('pages/AuthenticationPage.vue'),
       },
       {
-        path: '/profile',
+        path: ':alias',
+        component: ProfilePage,
+        meta: {
+          authenticated: true,
+        },
+      },
+      {
+        path: '/me',
         name: 'profile',
-        component: () => import('pages/ProfilePage.vue'),
+        component: ProfilePage,
         meta: {
           authenticated: true,
         },
