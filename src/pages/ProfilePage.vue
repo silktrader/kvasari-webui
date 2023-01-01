@@ -14,13 +14,35 @@
           <div class='name'>
             <span>{{ user.Name }}</span>
             <q-btn round outline icon='las la-user-edit' v-if='isAuthUser'>
-              <q-popup-edit v-model='userName' :cover='false' :offset='[0, 10]' v-slot='scope' buttons
-                            :validate='v => v.length > 6' @save='saveUserName'>
-                <q-input color='accent' v-model='scope.value' dense autofocus counter @keyup.enter='scope.set' :rules="[
-            val => scope.validate(val) || 'More than six characters required'
-          ]" style='width: 35ch'>
+              <q-popup-edit v-model='user.Name'
+                            :cover='false'
+                            :offset='[0, 10]'
+                            v-slot='scope'
+                            :validate='v => v && v.length > 6'
+                            @save='saveUserName'>
+                <q-input color='accent'
+                         v-model='scope.value'
+                         dense
+                         autofocus
+                         counter
+                         spellcheck='false'
+                         @keyup.enter='scope.set'
+                         :rules="[val => scope.validate(val) || 'More than six characters required']"
+                         style='width: 35ch'>
                   <template v-slot:prepend>
                     <q-icon name='edit' color='accent' />
+                  </template>
+                  <template v-slot:after>
+                    <q-btn
+                      flat dense icon='cancel'
+                      @click.stop.prevent='scope.cancel'
+                    />
+
+                    <q-btn
+                      flat dense icon='check_circle'
+                      @click.stop.prevent='scope.set'
+                      :disable='scope.validate(scope.value) === false || scope.initialValue === scope.value'
+                    />
                   </template>
                 </q-input>
               </q-popup-edit>
@@ -86,7 +108,7 @@
 
 
 <script setup lang='ts'>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useAuthStore } from 'stores/auth-store';
 import { useUserStore } from 'stores/user-store';
@@ -103,45 +125,40 @@ const q = useQuasar();
 const maxFileSize = 41943040; // ~40MB
 const acceptableFormats: ReadonlyArray<string> = ['.jpg', '.jpeg', '.png', '.webp'];
 
-const userName = ref<string>();
-
 const { user } = storeToRefs(userStore);
 
 const isAuthUser = computed(() => userStore.user.Alias == authStore.user?.Alias);
 
+// Watch the route parameters for changes on creation. Two possibilities arise:
+// 1. `undefined` when the "/me" path is accessed
+// 2. `alias` otherwise
 watch(
   () => route.params,
-  (toParams, previousParams) => {
-    // userStore.setUserAlias(toParams.alias ?? auth)
-    if (toParams.alias) {
-      userStore.setUser(toParams.alias as string);
-    } else {
-      userStore.setUser(authStore.user?.Alias ?? ''); // tk
+  toParams => {
+    try {
+      userStore.setUser(toParams.alias as string ?? authStore.user?.Alias);
+    } catch (error) {
+      if (error instanceof BadRequestError) {
+        q.notify({
+          type: 'negative',
+          message: `Couldn't update the user profile: </br><em>${error.Message}</em>.`,
+          html: true
+        });
+      } else {
+        q.notify({ type: 'negative', message: 'Couldn\'t update the user profile.' });
+      }
     }
   },
   { immediate: true }
 );
 
-onMounted(async () => {
-  try {
-    //await userStore.clearUploads();
-    //await userStore.UpdateProfile();
-  } catch (error) {
-    if (error instanceof BadRequestError) {
-      q.notify({
-        type: 'negative',
-        message: `Couldn't update the user profile: </br><em>${error.Message}</em>.`,
-        html: true
-      });
-    } else {
-      q.notify({ type: 'negative', message: 'Couldn\'t update the user profile.' });
-    }
-  }
-});
-
+// Attempts to perform a name change, updating stores on success.
 async function saveUserName(newName: string, oldName: string): Promise<void> {
   try {
+    // only auth users are allowed to edit their name when viewing their profile
     await authStore.updateName(newName);
+    // there's a potential issue with using a readonly field as input model
+    userStore.updateName(newName);
     q.notify({
       type: 'positive',
       message: `Name changed from ${oldName} to <b>${newName}</b>`,

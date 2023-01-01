@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
 import { reactive, readonly, ref } from 'vue';
 import { api } from 'boot/axios';
-import { useAuthStore } from 'stores/auth-store';
 
 export interface UploadedArtwork {
   Id: string;
@@ -64,6 +63,10 @@ export const useUserStore = defineStore('user', () => {
     uploads.value.push(...response.data.Artworks);
   }
 
+  function updateName(newName: string) {
+    user.Name = newName;
+  }
+
   return {
     user: readonly(user),
     uploads: readonly(uploads),
@@ -72,5 +75,6 @@ export const useUserStore = defineStore('user', () => {
     setUser,
     UpdateProfile,
     clearUploads,
+    updateName,
   };
 });

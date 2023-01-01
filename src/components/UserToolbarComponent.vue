@@ -33,8 +33,7 @@
             <q-item
               clickable
               v-ripple
-              :active="link === 'settings'"
-              @click="link = 'settings'"
+              disable
             >
               <q-item-section avatar>
                 <q-icon name='settings' />
@@ -59,7 +58,7 @@
         <div class='user-menu-column'>
           <q-avatar size='120px'>
             <img src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'
-                 class='user-avatar'>
+                 class='user-avatar' alt='User Avatar'>
           </q-avatar>
 
           <section class='user-name-alias'>
