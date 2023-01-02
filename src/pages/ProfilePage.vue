@@ -94,7 +94,7 @@
             @failed='onFailedUpload'
           />
         </div>
-        <artwork-preview-component v-for='artwork in userStore.uploads' :key='artwork.Id'
+        <artwork-preview-component v-for='[id, artwork] in artworks' :key='id'
                                    :artwork='artwork'></artwork-preview-component>
         <div class='spacer'></div>
 
@@ -125,7 +125,7 @@ const q = useQuasar();
 const maxFileSize = 41943040; // ~40MB
 const acceptableFormats: ReadonlyArray<string> = ['.jpg', '.jpeg', '.png', '.webp'];
 
-const { user } = storeToRefs(userStore);
+const { user, artworks } = storeToRefs(userStore);
 
 const isAuthUser = computed(() => userStore.user.Alias == authStore.user?.Alias);
 
@@ -136,7 +136,10 @@ watch(
   () => route.params,
   toParams => {
     try {
-      userStore.setUser(toParams.alias as string ?? authStore.user?.Alias);
+      const alias = toParams.alias as string ?? authStore.user?.Alias;
+      userStore.setUser(alias);
+      userStore.resetArtworks();
+      userStore.loadArtworks(alias);
     } catch (error) {
       if (error instanceof BadRequestError) {
         q.notify({

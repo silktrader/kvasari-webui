@@ -6,7 +6,7 @@ export interface UploadedArtwork {
   Id: string;
   Title?: string;
   Format: string;
-  Added: Date;
+  Added: string;
   Comments: number;
   Reactions: number;
 }
@@ -27,9 +27,15 @@ interface UserDetails extends User {
 
 export const useUserStore = defineStore('user', () => {
   const user = reactive<UserDetails>({} as UserDetails);
-  const uploads = ref<UploadedArtwork[]>([]);
+
   const followers = ref<UserRelation[]>([]);
   const followed = ref<UserRelation[]>([]);
+
+  // Stores the artworks uploaded by the targeted user, and fetched by the requester, in reverse chronological order.
+  const artworks = ref<Map<string, UploadedArtwork>>(new Map());
+
+  // Tracks whence to get the next artworks from.
+  const earliestArtworkDate = ref<string>(new Date().toISOString());
 
   async function setUser(userAlias: string) {
     const response = await api.get<{
@@ -49,19 +55,64 @@ export const useUserStore = defineStore('user', () => {
     user.Alias = userAlias;
   }
 
-  async function clearUploads() {
-    uploads.value = [];
+  function resetArtworks(): void {
+    artworks.value.clear();
+    earliestArtworkDate.value = new Date().toISOString();
   }
 
-  async function UpdateProfile() {
+  // Load an artist's artworks, in reverse chronological order, keeping track of deletions and new uploads since the last
+  // request.
+  // Loading artworks should be performed in parallel to getting user data, to minimise latency.
+  async function loadArtworks(userAlias: string) {
     const response = await api.get<{
-      Artworks: UploadedArtwork[];
-      Followers: UserRelation[];
-      FollowedUsers: UserRelation[];
-    }>(`/users/${user.Alias}/profile`);
+      Requested: UploadedArtwork[];
+      New: UploadedArtwork[];
+      Deleted: string[];
+    }>('artworks', {
+      params: {
+        artist: userAlias,
+        latest: new Date().toISOString(),
+        since: earliestArtworkDate.value,
+      },
+    });
 
-    uploads.value.push(...response.data.Artworks);
+    // add artworks in reverse chronological order
+    // not deleting the ID property inside the object, for pure convenience
+    const newArtworks = new Map<string, UploadedArtwork>();
+    response.data.New.forEach(newArtwork =>
+      newArtworks.set(newArtwork.Id, newArtwork)
+    );
+
+    // remove deleted artworks from current collection
+    response.data.Deleted.forEach(deletedId =>
+      artworks.value.delete(deletedId)
+    );
+
+    // add newly request artworks to current collection
+    response.data.Requested.forEach(requestedArtwork =>
+      artworks.value.set(requestedArtwork.Id, requestedArtwork)
+    );
+
+    // merge the new items with the current collection to update the latter
+    artworks.value = new Map<string, UploadedArtwork>([
+      ...newArtworks,
+      ...artworks.value,
+    ]);
+
+    // update timestamps to chain future requests
+    earliestArtworkDate.value =
+      response.data.Requested.at(-1)?.Added ?? earliestArtworkDate.value;
   }
+
+  // async function UpdateProfile() {
+  //   const response = await api.get<{
+  //     Artworks: UploadedArtwork[];
+  //     Followers: UserRelation[];
+  //     FollowedUsers: UserRelation[];
+  //   }>(`/users/${user.Alias}/profile`);
+  //
+  //   uploads.value.push(...response.data.Artworks);
+  // }
 
   function updateName(newName: string) {
     user.Name = newName;
@@ -69,12 +120,12 @@ export const useUserStore = defineStore('user', () => {
 
   return {
     user: readonly(user),
-    uploads: readonly(uploads),
+    artworks: readonly(artworks),
     followers,
     followed,
     setUser,
-    UpdateProfile,
-    clearUploads,
     updateName,
+    resetArtworks,
+    loadArtworks,
   };
 });

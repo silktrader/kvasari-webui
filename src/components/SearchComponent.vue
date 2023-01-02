@@ -80,9 +80,8 @@ function filterResults(val: string, update: any, abort: any): void {
   }
 
   update(async () => {
-    const sanitisedValue = val.toLowerCase();
-    console.log('updating');
     try {
+      const sanitisedValue = val.toLowerCase();
       const results = await api.get<ReadonlyArray<User>>(`${baseUrl}/users`, {
         params: {
           filter: sanitisedValue,
