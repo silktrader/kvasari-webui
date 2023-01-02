@@ -79,7 +79,7 @@ interface Comment {
 }
 
 const props = defineProps<{ artworkId: string }>();
-const user = <User>useAuthStore().userAlias;
+const user = useAuthStore().user as User;
 const q = useQuasar();
 
 const comments = ref<Comment[]>([]);

@@ -12,6 +12,7 @@ export interface UploadedArtwork {
 }
 
 export interface User {
+  Id: string;
   Alias: string;
   Name: string;
 }
@@ -23,6 +24,11 @@ interface UserRelation extends User {
 interface UserDetails extends User {
   Email: string;
   Created: Date;
+  Followers: number;
+  Following: number;
+  Artworks: number;
+  Reactions: number;
+  Comments: number;
 }
 
 export const useUserStore = defineStore('user', () => {
@@ -103,16 +109,6 @@ export const useUserStore = defineStore('user', () => {
     earliestArtworkDate.value =
       response.data.Requested.at(-1)?.Added ?? earliestArtworkDate.value;
   }
-
-  // async function UpdateProfile() {
-  //   const response = await api.get<{
-  //     Artworks: UploadedArtwork[];
-  //     Followers: UserRelation[];
-  //     FollowedUsers: UserRelation[];
-  //   }>(`/users/${user.Alias}/profile`);
-  //
-  //   uploads.value.push(...response.data.Artworks);
-  // }
 
   function updateName(newName: string) {
     user.Name = newName;
