@@ -22,7 +22,7 @@ export const useAuthStore = defineStore('auth', () => {
   );
 
   // set or clear the storage depending on the user's value
-  watch(user, async (newUser) => {
+  watch(user, async newUser => {
     localStorage.clear();
     if (newUser) localStorage.setItem(userKey, JSON.stringify(newUser));
   });
@@ -78,5 +78,15 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = { ...user.value, Name: name };
   }
 
-  return { user, Register, SignIn, SignOut, updateName };
+  async function followUser(targetAlias: string): Promise<void> {
+    if (!user.value) throw new Error('No authenticated user');
+    await api.post<{
+      Alias: string;
+      Followed: Date;
+    }>(`/users/${user.value.Alias}/followed`, {
+      TargetAlias: targetAlias,
+    });
+  }
+
+  return { user, Register, SignIn, SignOut, updateName, followUser };
 });

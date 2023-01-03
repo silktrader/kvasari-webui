@@ -13,6 +13,8 @@
         <section class='user-name-alias'>
           <div class='name'>
             <span>{{ user.Name }}</span>
+
+            <!-- Name editing shortcut for the profile owner -->
             <q-btn round outline icon='las la-user-edit' v-if='isAuthUser'>
               <q-popup-edit v-model='user.Name'
                             :cover='false'
@@ -47,6 +49,11 @@
                 </q-input>
               </q-popup-edit>
             </q-btn>
+
+            <!-- Relevant controls when viewing another user's profile -->
+            <q-btn rounded outline label='Follow' v-if='canFollow' @click='follow()'></q-btn>
+            <q-btn rounded outline label='Unfollow' v-if='canUnfollow'></q-btn>
+
           </div>
           <span class='alias'>@{{ user.Alias }}</span>
         </section>
@@ -127,8 +134,6 @@ const acceptableFormats: ReadonlyArray<string> = ['.jpg', '.jpeg', '.png', '.web
 
 const { user, artworks } = storeToRefs(userStore);
 
-const isAuthUser = computed(() => userStore.user.Alias == authStore.user?.Alias);
-
 // Watch the route parameters for changes on creation. Two possibilities arise:
 // 1. `undefined` when the "/me" path is accessed
 // 2. `alias` otherwise
@@ -154,6 +159,15 @@ watch(
   },
   { immediate: true }
 );
+
+// determines whether the viewing user matches the authenticated one; can be referred to by other computed props.
+const isAuthUser = computed(() => userStore.user.Alias === authStore.user?.Alias);
+
+// determines whether the viewing user can follow the target; banned users won't view the profile at all
+const canFollow = computed<boolean>(() => !isAuthUser.value && !user.value.FollowedByUser);
+
+// determines whether the viewing user can unfollow the target
+const canUnfollow = computed<boolean>(() => !isAuthUser.value && user.value.FollowedByUser);
 
 // Attempts to perform a name change, updating stores on success.
 async function saveUserName(newName: string, oldName: string): Promise<void> {
@@ -218,6 +232,27 @@ function onFailedUpload(info: { xhr: { response: string } }): void {
     html: true
   });
 }
+
+function follow(): void {
+  try {
+    authStore.followUser(user.value.Alias);
+    // shouldn't be able to do this and yet
+    userStore.user = { ...userStore.user, FollowedByUser: true, Followers: userStore.user.Followers + 1 };
+    q.notify({
+      type: 'positive',
+      message: `You now follow <b>${user.value.Alias}</b>.`,
+      html: true
+    });
+  } catch (e) {
+    console.error(e);
+    q.notify({
+      type: 'negative',
+      message: `A problem arose while attemptint to follow <b>${user.value.Alias}</b>`,
+      html: true
+    });
+  }
+}
+
 
 </script>
 

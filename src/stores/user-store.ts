@@ -29,6 +29,8 @@ interface UserDetails extends User {
   Artworks: number;
   Reactions: number;
   Comments: number;
+  FollowsUser: boolean;
+  FollowedByUser: boolean;
 }
 
 export const useUserStore = defineStore('user', () => {
@@ -44,17 +46,7 @@ export const useUserStore = defineStore('user', () => {
   const earliestArtworkDate = ref<string>(new Date().toISOString());
 
   async function setUser(userAlias: string) {
-    const response = await api.get<{
-      Name: string;
-      Email: string;
-      Followers: number;
-      Following: number;
-      Artworks: number;
-      Comments: number;
-      Reactions: number;
-      Created: Date;
-      Updated: Date;
-    }>(`/users/${userAlias}`);
+    const response = await api.get<UserDetails>(`/users/${userAlias}`);
 
     // can't assign new object, must use current reference
     Object.assign(user, response.data);
