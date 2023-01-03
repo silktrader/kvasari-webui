@@ -151,7 +151,7 @@
 
 <script setup lang='ts'>
 import { reactive, ref } from 'vue';
-import { useAuthStore } from 'stores/auth-store';
+import { useUserStore } from 'stores/user-store';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { BadRequestError } from 'boot/axios';
@@ -171,7 +171,7 @@ const regData = reactive({
 const showRegPassword = ref<boolean>(true);
 
 const quasar = useQuasar();
-const authStore = useAuthStore();
+const authStore = useUserStore();
 const router = useRouter();
 
 async function onSignIn() {

@@ -55,7 +55,7 @@
 
 import { ref } from 'vue';
 import { api, baseUrl } from 'boot/axios';
-import { useAuthStore, User } from 'stores/auth-store';
+import { useUserStore, User } from 'stores/user-store';
 import { useRouter } from 'vue-router';
 
 interface SearchResult {
@@ -71,7 +71,7 @@ const searchResults = ref<ReadonlyArray<SearchResult>>([]);
 const searchText = ref<string>('');
 
 // assumes user's authentication for the moment
-const user: User = <User>useAuthStore().user;
+const user: User = <User>useUserStore().user;
 
 function filterResults(val: string, update: any, abort: any): void {
   if (val.length < 3) {

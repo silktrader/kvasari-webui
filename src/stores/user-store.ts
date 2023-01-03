@@ -1,119 +1,92 @@
 import { defineStore } from 'pinia';
-import { reactive, readonly, ref } from 'vue';
 import { api } from 'boot/axios';
-
-export interface UploadedArtwork {
-  Id: string;
-  Title?: string;
-  Format: string;
-  Added: string;
-  Comments: number;
-  Reactions: number;
-}
+import { ref, watch } from 'vue';
 
 export interface User {
-  Id: string;
-  Alias: string;
-  Name: string;
+  readonly Id: string;
+  readonly Alias: string;
+  readonly Name: string;
 }
 
-interface UserRelation extends User {
-  Date: Date;
+interface RegisterUserResponse extends User {
+  readonly Email: string;
+  readonly Created: Date;
+  readonly Updated: Date;
 }
 
-interface UserDetails extends User {
-  Email: string;
-  Created: Date;
-  Followers: number;
-  Following: number;
-  Artworks: number;
-  Reactions: number;
-  Comments: number;
-  FollowsUser: boolean;
-  FollowedByUser: boolean;
-}
+const userKey: Readonly<string> = 'user';
 
 export const useUserStore = defineStore('user', () => {
-  const user = reactive<UserDetails>({} as UserDetails);
+  const user = ref<User | null>(
+    JSON.parse(localStorage.getItem(userKey) ?? 'null')
+  );
 
-  const followers = ref<UserRelation[]>([]);
-  const followed = ref<UserRelation[]>([]);
+  // set or clear the storage depending on the user's value
+  watch(user, async newUser => {
+    localStorage.clear();
+    if (newUser) localStorage.setItem(userKey, JSON.stringify(newUser));
+  });
 
-  // Stores the artworks uploaded by the targeted user, and fetched by the requester, in reverse chronological order.
-  const artworks = ref<Map<string, UploadedArtwork>>(new Map());
+  async function Register(regData: {
+    Alias: string;
+    Password: string;
+    Email: string;
+    Name: string;
+  }) {
+    try {
+      const response = await api.post<RegisterUserResponse>('/users', regData);
 
-  // Tracks whence to get the next artworks from.
-  const earliestArtworkDate = ref<string>(new Date().toISOString());
-
-  async function setUser(userAlias: string) {
-    const response = await api.get<UserDetails>(`/users/${userAlias}`);
-
-    // can't assign new object, must use current reference
-    Object.assign(user, response.data);
-    user.Alias = userAlias;
+      // proceed to automatically sign in the user on success, additional properties won't hurt
+      user.value = { ...response.data };
+    } catch (e) {
+      // rethrow the error so components can handle it
+      // additional logic is expected here
+      throw e;
+    }
   }
 
-  function resetArtworks(): void {
-    artworks.value.clear();
-    earliestArtworkDate.value = new Date().toISOString();
+  async function SignIn(alias: string, password: string) {
+    try {
+      localStorage.clear();
+      const response = await api.post<User & { Status?: string }>('/sessions', {
+        alias: alias,
+        password: password,
+      });
+
+      // remove unnecessary data, debatable mutation
+      delete response.data.Status;
+      user.value = { ...response.data };
+    } catch (e) {
+      localStorage.clear();
+
+      // rethrow the error so components can handle it
+      throw e;
+    }
   }
 
-  // Load an artist's artworks, in reverse chronological order, keeping track of deletions and new uploads since the last
-  // request.
-  // Loading artworks should be performed in parallel to getting user data, to minimise latency.
-  async function loadArtworks(userAlias: string) {
-    const response = await api.get<{
-      Requested: UploadedArtwork[];
-      New: UploadedArtwork[];
-      Deleted: string[];
-    }>('artworks', {
-      params: {
-        artist: userAlias,
-        latest: new Date().toISOString(),
-        since: earliestArtworkDate.value,
-      },
+  function SignOut() {
+    user.value = null;
+  }
+
+  async function updateName(name: string): Promise<void> {
+    if (!user.value) return;
+    await api.put(`/users/${user.value.Alias}/name`, {
+      name,
     });
 
-    // add artworks in reverse chronological order
-    // not deleting the ID property inside the object, for pure convenience
-    const newArtworks = new Map<string, UploadedArtwork>();
-    response.data.New.forEach(newArtwork =>
-      newArtworks.set(newArtwork.Id, newArtwork)
-    );
-
-    // remove deleted artworks from current collection
-    response.data.Deleted.forEach(deletedId =>
-      artworks.value.delete(deletedId)
-    );
-
-    // add newly request artworks to current collection
-    response.data.Requested.forEach(requestedArtwork =>
-      artworks.value.set(requestedArtwork.Id, requestedArtwork)
-    );
-
-    // merge the new items with the current collection to update the latter
-    artworks.value = new Map<string, UploadedArtwork>([
-      ...newArtworks,
-      ...artworks.value,
-    ]);
-
-    // update timestamps to chain future requests
-    earliestArtworkDate.value =
-      response.data.Requested.at(-1)?.Added ?? earliestArtworkDate.value;
+    // updating the Name will trigger a local storage update by way of a watcher
+    user.value = { ...user.value, Name: name };
   }
 
-  function updateName(newName: string) {
-    user.Name = newName;
+  async function followArtist(alias: string): Promise<void> {
+    if (!user.value) throw new Error('No authenticated user');
+    await api.post<{
+      Alias: string;
+      Followed: Date;
+    }>(`/users/${user.value.Alias}/followed`, {
+      TargetAlias: alias,
+    });
   }
 
-  return {
-    user: readonly(user),
-    artworks: readonly(artworks),
-    followers,
-    followed,
-    setUser,
-    updateName,
-    resetArtworks,
-    loadArtworks,
-  };
+  return { user, Register, SignIn, SignOut, updateName, followArtist };
 });

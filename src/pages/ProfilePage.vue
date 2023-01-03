@@ -12,11 +12,11 @@
 
         <section class='user-name-alias'>
           <div class='name'>
-            <span>{{ user.Name }}</span>
+            <span>{{ artist.Name }}</span>
 
             <!-- Name editing shortcut for the profile owner -->
-            <q-btn round outline icon='las la-user-edit' v-if='isAuthUser'>
-              <q-popup-edit v-model='user.Name'
+            <q-btn round outline icon='las la-user-edit' v-if='isUser'>
+              <q-popup-edit v-model='artist.Name'
                             :cover='false'
                             :offset='[0, 10]'
                             v-slot='scope'
@@ -55,25 +55,25 @@
             <q-btn rounded outline label='Unfollow' v-if='canUnfollow'></q-btn>
 
           </div>
-          <span class='alias'>@{{ user.Alias }}</span>
+          <span class='alias'>@{{ artist.Alias }}</span>
         </section>
       </section>
 
       <section class='user-stats'>
-        <q-btn flat no-caps><span class='user-stat-label'><b>{{ user.Followers }}</b> Followers</span></q-btn>
-        <q-btn flat no-caps><span class='user-stat-label'><b>{{ user.Following }}</b> Following</span></q-btn>
-        <q-btn flat no-caps><span class='user-stat-label'><b>{{ user.Artworks }}</b> Artworks</span></q-btn>
+        <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.Followers }}</b> Followers</span></q-btn>
+        <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.Following }}</b> Following</span></q-btn>
+        <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.Artworks }}</b> Artworks</span></q-btn>
         <span style='flex-grow: 3'></span>
         <q-btn flat no-caps dense>
           <span class='user-stat-label'>
-            <b>{{ user.Comments }}</b>
+            <b>{{ artist.Comments }}</b>
             <q-icon name='comment' />
           </span>
         </q-btn>
 
         <q-btn flat no-caps dense>
           <span class='user-stat-label'>
-            <b>{{ user.Reactions }}</b>
+            <b>{{ artist.Reactions }}</b>
             <q-icon name='recommend' />
           </span>
         </q-btn>
@@ -84,7 +84,7 @@
 
     <div>
       <div class='uploads-previews'>
-        <div v-if='isAuthUser'>
+        <div v-if='isUser'>
           <q-uploader
             flat
             label='Upload New Artwork'
@@ -93,9 +93,9 @@
             url='http://localhost:3000/artworks'
             field-name='image'
             :form-fields='[
-              {name: "alias", value: authStore.user.Alias}
+              {name: "alias", value: us.user.Alias}
             ]'
-            :headers="[{name: 'Authorization', value: `Bearer ${authStore.user.Id}`}]"
+            :headers="[{name: 'Authorization', value: `Bearer ${us.user.Id}`}]"
             multiple
             @rejected='onUploadRejected'
             @failed='onFailedUpload'
@@ -117,22 +117,22 @@
 <script setup lang='ts'>
 import { computed, watch } from 'vue';
 import { useQuasar } from 'quasar';
-import { useAuthStore } from 'stores/auth-store';
 import { useUserStore } from 'stores/user-store';
+import { useArtistStore } from 'stores/artist-store';
 import { BadRequestError } from 'boot/axios';
 import ArtworkPreviewComponent from 'components/ArtworkPreviewComponent.vue';
 import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 
 const route = useRoute();
-const userStore = useUserStore();
-const authStore = useAuthStore();
+const as = useArtistStore();
+const us = useUserStore();
 const q = useQuasar();
 
 const maxFileSize = 41943040; // ~40MB
 const acceptableFormats: ReadonlyArray<string> = ['.jpg', '.jpeg', '.png', '.webp'];
 
-const { user, artworks } = storeToRefs(userStore);
+const { artist, artworks } = storeToRefs(as);
 
 // Watch the route parameters for changes on creation. Two possibilities arise:
 // 1. `undefined` when the "/me" path is accessed
@@ -141,10 +141,10 @@ watch(
   () => route.params,
   toParams => {
     try {
-      const alias = toParams.alias as string ?? authStore.user?.Alias;
-      userStore.setUser(alias);
-      userStore.resetArtworks();
-      userStore.loadArtworks(alias);
+      const alias = toParams.alias as string ?? us.user?.Alias;
+      as.setArtist(alias);
+      as.resetArtworks();
+      as.loadArtworks(alias);
     } catch (error) {
       if (error instanceof BadRequestError) {
         q.notify({
@@ -161,21 +161,21 @@ watch(
 );
 
 // determines whether the viewing user matches the authenticated one; can be referred to by other computed props.
-const isAuthUser = computed(() => userStore.user.Alias === authStore.user?.Alias);
+const isUser = computed(() => as.artist.Alias === us.user?.Alias);
 
 // determines whether the viewing user can follow the target; banned users won't view the profile at all
-const canFollow = computed<boolean>(() => !isAuthUser.value && !user.value.FollowedByUser);
+const canFollow = computed<boolean>(() => !isUser.value && !artist.value.FollowedByUser);
 
 // determines whether the viewing user can unfollow the target
-const canUnfollow = computed<boolean>(() => !isAuthUser.value && user.value.FollowedByUser);
+const canUnfollow = computed<boolean>(() => !isUser.value && artist.value.FollowedByUser);
 
 // Attempts to perform a name change, updating stores on success.
 async function saveUserName(newName: string, oldName: string): Promise<void> {
   try {
     // only auth users are allowed to edit their name when viewing their profile
-    await authStore.updateName(newName);
+    await us.updateName(newName);
     // there's a potential issue with using a readonly field as input model
-    userStore.updateName(newName);
+    as.updateName(newName);
     q.notify({
       type: 'positive',
       message: `Name changed from ${oldName} to <b>${newName}</b>`,
@@ -235,19 +235,18 @@ function onFailedUpload(info: { xhr: { response: string } }): void {
 
 function follow(): void {
   try {
-    authStore.followUser(user.value.Alias);
-    // shouldn't be able to do this and yet
-    userStore.user = { ...userStore.user, FollowedByUser: true, Followers: userStore.user.Followers + 1 };
+    us.followArtist(artist.value.Alias);
+    as.addUserAsFollower();
     q.notify({
       type: 'positive',
-      message: `You now follow <b>${user.value.Alias}</b>.`,
+      message: `You now follow <b>${artist.value.Alias}</b>.`,
       html: true
     });
   } catch (e) {
     console.error(e);
     q.notify({
       type: 'negative',
-      message: `A problem arose while attemptint to follow <b>${user.value.Alias}</b>`,
+      message: `A problem arose while attemptint to follow <b>${artist.value.Alias}</b>`,
       html: true
     });
   }

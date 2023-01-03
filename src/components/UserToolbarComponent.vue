@@ -1,6 +1,6 @@
 <template>
 
-  <q-btn push v-if='authStore.user' color='red' label='Me'>
+  <q-btn push v-if='us.artist' color='red' label='Me'>
     <q-menu>
       <div class='user-menu'>
 
@@ -62,8 +62,8 @@
           </q-avatar>
 
           <section class='user-name-alias'>
-            <span>{{ authStore.user?.Name }}</span>
-            <span class='artist-alias'>@{{ authStore.user?.Alias }}</span>
+            <span>{{ us.user?.Name }}</span>
+            <span class='artist-alias'>@{{ us.user?.Alias }}</span>
           </section>
 
           <q-btn color='primary' label='Sign Out' v-close-popup @click='signOut' />
@@ -76,16 +76,16 @@
 
 <script setup lang='ts'>
 
-import { useAuthStore } from 'stores/auth-store';
+import { useUserStore } from 'stores/user-store';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 
-const authStore = useAuthStore();
+const us = useUserStore();
 const router = useRouter();
 const quasar = useQuasar();
 
 function signOut(): void {
-  authStore.SignOut();
+  us.SignOut();
   quasar.notify({
     type: 'positive',
     message: 'Signed out. Until soon!',

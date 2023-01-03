@@ -65,7 +65,7 @@
 
 import { computed, ref } from 'vue';
 import { api, baseUrl } from 'boot/axios';
-import { useAuthStore, User } from 'stores/auth-store';
+import { useUserStore, User } from 'stores/user-store';
 import { useQuasar } from 'quasar';
 
 enum ReactionType {
@@ -87,7 +87,7 @@ const reactionIcons = new Map([
 
 const props = defineProps<{ artworkId: string }>();
 const q = useQuasar();
-const user = <User>useAuthStore().userAlias;
+const user = <User>useUserStore().user;
 
 const selectedReaction = ref<ReactionType>();
 const reactions = ref<ReadonlyArray<Reaction>>([]);

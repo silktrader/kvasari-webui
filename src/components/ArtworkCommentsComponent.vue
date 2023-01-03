@@ -66,9 +66,10 @@
 
 import { ref } from 'vue';
 import { api, BadRequestError } from 'boot/axios';
-import { useAuthStore, User } from 'stores/auth-store';
+import { useUserStore } from 'stores/user-store';
 import utilities from './../utilities/utilities';
 import { useQuasar } from 'quasar';
+import { storeToRefs } from 'pinia';
 
 interface Comment {
   Id: string;
@@ -79,7 +80,7 @@ interface Comment {
 }
 
 const props = defineProps<{ artworkId: string }>();
-const user = useAuthStore().user as User;
+const { user } = storeToRefs(useUserStore());
 const q = useQuasar();
 
 const comments = ref<Comment[]>([]);
@@ -101,12 +102,13 @@ function formatRelativeDate(commentDate: Date): string {
 }
 
 async function onNewComment(): Promise<void> {
+  if (user.value == null) throw new Error();
   try {
     const response = await api.post<{ Id: string; Date: Date }>(`/artworks/${props.artworkId}/comments`, { Comment: newComment.value });
     comments.value = [...comments.value, {
       Id: response.data.Id,
-      AuthorAlias: user.Alias,
-      AuthorName: user.Name,
+      AuthorAlias: user.value.Alias,
+      AuthorName: user.value.Name,
       Comment: newComment.value,
       Date: response.data.Date
     }];
@@ -118,7 +120,7 @@ async function onNewComment(): Promise<void> {
 }
 
 function canEdit(comment: Comment): boolean {
-  return comment.AuthorAlias === user.Alias;
+  return comment.AuthorAlias === user.value?.Alias;
 }
 
 async function onDeleteComment(comment: Comment): Promise<void> {

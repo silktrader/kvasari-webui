@@ -23,10 +23,11 @@
 <script setup lang='ts'>
 
 import UserToolbarComponent from 'components/UserToolbarComponent.vue';
-import { useAuthStore } from 'stores/auth-store';
+import { useUserStore } from 'stores/user-store';
 import SearchComponent from 'components/SearchComponent.vue';
+import { storeToRefs } from 'pinia';
 
-const user = useAuthStore().user;
+const { user } = storeToRefs(useUserStore());
 
 </script>
 

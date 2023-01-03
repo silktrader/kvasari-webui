@@ -26,19 +26,19 @@
 
 <script setup lang='ts'>
 
-import { UploadedArtwork } from 'stores/user-store';
+import { UploadedArtwork } from 'stores/artist-store';
 import { computed, onBeforeUnmount, onMounted, PropType, ref } from 'vue';
 import utilities from 'src/utilities/utilities';
 import { useRouter } from 'vue-router';
 import { api } from 'boot/axios';
-import { useAuthStore } from 'stores/auth-store';
+import { useUserStore } from 'stores/user-store';
 
 const props = defineProps({
   artwork: Object as PropType<UploadedArtwork>
 });
 
 const router = useRouter();
-const authStore = useAuthStore();
+const authStore = useUserStore();
 
 const imgUrl = ref<string>('');
 
@@ -51,7 +51,7 @@ onBeforeUnmount(() => {
 });
 
 const imgAlt = computed(() => {
-  return `${props.artwork?.Title || 'Untitled'}, by ${authStore.userAlias?.Name}`;
+  return `${props.artwork?.Title || 'Untitled'}, by ${authStore.user?.Name}`;
 });
 
 function navigateTo(artworkId: string): void {

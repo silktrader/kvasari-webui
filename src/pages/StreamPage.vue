@@ -38,16 +38,16 @@ import { onMounted } from 'vue';
 import { useStreamStore } from 'stores/stream-store';
 import { date } from 'quasar';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from 'stores/auth-store';
+import { useUserStore } from 'stores/user-store';
 
 const router = useRouter();
 const streamStore = useStreamStore();
-const authStore = useAuthStore();
+const us = useUserStore();
 
 onMounted(() => {
   const now = new Date().toISOString();
   streamStore.clearStream();
-  if (authStore.userAlias) streamStore.updateStream(authStore.userAlias.Alias, now, now);
+  if (us.user) streamStore.updateStream(us.user.Alias, now, now);
 });
 
 function timeAgo(datetime: Date): number {

@@ -1,6 +1,6 @@
 import { boot } from 'quasar/wrappers';
 import axios, { AxiosInstance } from 'axios';
-import { useAuthStore } from 'stores/auth-store';
+import { useUserStore } from 'stores/user-store';
 
 export class BadRequestError {
   constructor(public Message: string, public Timestamp: Date) {}
@@ -31,9 +31,9 @@ const api = axios.create({
 // tk export base url
 api.interceptors.request.use(
   function (config) {
-    const authStore = useAuthStore();
-    if (authStore.user) {
-      config.headers.Authorization = `Bearer ${authStore.user.Id}`;
+    const us = useUserStore();
+    if (us.user) {
+      config.headers.Authorization = `Bearer ${us.user.Id}`;
     }
     return config;
   },
@@ -51,7 +51,7 @@ api.interceptors.response.use(
     // status codes outside the range of 2xx are caught here
     switch (error.response?.status) {
       case 401:
-        useAuthStore().SignOut();
+        useUserStore().SignOut();
         return Promise.reject(error);
       // wrap 400 errors with a custom class for easier handling down the line
       case 400:
