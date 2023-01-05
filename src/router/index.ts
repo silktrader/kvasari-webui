@@ -29,7 +29,7 @@ export default route(function (/* { store, ssrContext } */) {
   const us = useUserStore();
 
   // global guard to ensure that non-authenticated users are redirected to the authentication route
-  router.beforeEach(async (to, from) => {
+  router.beforeEach(async to => {
     if (!us.user && to.matched.some(record => record.meta.authenticated)) {
       // redirect the user to the authentication page
       return { name: 'authentication' };

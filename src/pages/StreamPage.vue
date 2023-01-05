@@ -119,7 +119,7 @@ ul::after {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  opacity: 0%;
+  opacity: 0;
   transition: opacity 0.5s ease-in-out;
   -moz-transition: opacity 0.5s ease-in-out;
   -webkit-transition: opacity 0.5s ease-in-out;

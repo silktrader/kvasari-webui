@@ -1,6 +1,6 @@
 <template>
 
-  <q-btn push v-if='us.artist' color='red' label='Me'>
+  <q-btn push v-if='us.user' color='red' label='Me'>
     <q-menu>
       <div class='user-menu'>
 

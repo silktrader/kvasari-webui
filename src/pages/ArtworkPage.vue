@@ -24,7 +24,7 @@
 
 <script setup lang='ts'>
 
-import { onMounted, reactive, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import ArtworkDetailsComponent from 'components/ArtworkDetailsComponent.vue';
 import { useRoute } from 'vue-router';
 import ArtworkCommentsComponent from 'components/ArtworkCommentsComponent.vue';

@@ -102,7 +102,7 @@
           />
         </div>
         <artwork-preview-component v-for='[id, artwork] in artworks' :key='id'
-                                   :artwork='artwork'></artwork-preview-component>
+                                   :artwork='artwork' :author='artist'></artwork-preview-component>
         <div class='spacer'></div>
 
       </div>

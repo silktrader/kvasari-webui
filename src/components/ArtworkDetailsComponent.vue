@@ -1,6 +1,6 @@
 <template>
 
-  <section class='artwork-image'>
+  <section class='artwork-image' v-if='artwork'>
     <!--the id serves as a scrolling target-->
     <img id='image' :src='imgUrl' :alt='artwork.Title' class='shadow-20'>
 
@@ -17,7 +17,7 @@
 
   </section>
 
-  <section class='artwork-details' id='details'>
+  <section class='artwork-details' id='details' v-if='artwork'>
 
     <div class='details-header'>
       <q-btn square flat icon='close' class='caption-box close-button' @click='scrollToImage'>
@@ -36,13 +36,23 @@
       <div class='artist'>
         <q-avatar size='120px'>
           <img src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'
-               class='artist-avatar'>
+               class='artist-avatar' alt='User Avatar'>
         </q-avatar>
         <aside class='user-name-alias'>
-          <span>{{ artwork.AuthorName }}</span>
-          <span class='artist-alias'>@{{ artwork.AuthorAlias }}</span>
+          <span>{{ artwork.Author.Name }}</span>
+          <span class='artist-alias'>@{{ artwork.Author.Alias }}</span>
         </aside>
-        <q-btn outline color='primary' label='Follow' />
+
+        <!-- Owner or viewer contextual controls -->
+        <q-toggle
+          v-if='canEdit'
+          v-model='isEditing'
+          size='xl'
+          color='accent'
+          icon='edit'
+        />
+        <q-btn outline color='primary' label='Follow' v-if='canFollow' />
+
       </div>
 
       <div class='meta'>
@@ -67,62 +77,68 @@
 </template>
 
 <script setup lang='ts'>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
-import { api } from 'boot/axios';
-import { date, scroll } from 'quasar';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { api, NotFoundError } from 'boot/axios';
+import { date, scroll, useQuasar } from 'quasar';
 import utilities from 'src/utilities/utilities';
+import { useUserStore } from 'stores/user-store';
+import { useArtworkStore } from 'stores/artwork-store';
+import { storeToRefs } from 'pinia';
 
-interface Artwork {
-  AuthorName: string;
-  AuthorAlias: string;
-  Title: string;
-  Description: string;
-  PictureUrl: string;
-  Location: string;
-  Year: number;
-  Type: 'Like' | 'Perplexed'; // tk
-  Created: Date;
-  Added: Date;
-  Updated: Date;
-  Comments: number;
-  Reactions: number;
-  Url: string;
-}
 
 const props = defineProps<{ artworkId: string }>();
+const q = useQuasar();
+const us = useUserStore();
+const artworkStore = useArtworkStore();
 
-let artwork: Readonly<Artwork>;
+const { artwork } = storeToRefs(artworkStore);
+
+// Determines whether the artwork is being edited by the user, which triggers various controls.
+const isEditing = ref(false);
 
 const imgUrl = ref<string>('');
 const detailsVisible = ref<boolean>(false);
 const { getScrollTarget, setVerticalScrollPosition } = scroll;
 
-const getDetails = async () => {
-  // tk use param object
-  const response = await api.get<Artwork>(`/artworks/${props.artworkId}`);
-  artwork = reactive(response.data);
-};
+// a flag to indicate whether edit controls show on the page
+// const editMode = ref<boolean>(false);
 
-await getDetails();
+// load the artwork's data on creation
+try {
+  artworkStore.setArtwork(props.artworkId);
+} catch (error) {
+  if (error instanceof NotFoundError) {
+    q.notify({ type: 'negative', message: 'Artwork not found.' });
+  } else {
+    q.notify({ type: 'negative', message: 'Couldn\'t load the artwork\'s data, due to an unknown error' });
+  }
+}
 
 const dating = computed(() => {
-  if (artwork.Created) {
-    return date.formatDate(artwork.Created, 'YYYY-MM-DD');
+  if (artwork.value?.Created) {
+    return date.formatDate(artwork.value.Created, 'YYYY-MM-DD');
   }
-  if (artwork.Year) {
-    return `${artwork.Year} ca.`;
+  if (artwork.value?.Year) {
+    return `${artwork.value.Year} ca.`;
   }
   return 'Unknown';
 });
 
 const detailsTitle = computed(() => {
-  const creation: number = artwork.Created ? new Date(artwork.Created).getFullYear() : artwork.Year;
-  return `${artwork.Title ?? 'Untitled'}${creation ? ', ' + creation : ''}`;
+  const creation: number | undefined = artwork.value?.Created
+    ? new Date(artwork.value.Created).getFullYear()
+    : artwork.value?.Year;
+  return `${artwork.value?.Title ?? 'Untitled'}${creation ? ', ' + creation : ''}`;
 });
 
 // CSS classes handling scroll visibility
 const captionBox = computed(() => detailsVisible.value ? 'inactive-box' : 'active-box');
 const captionTextClass = computed(() => detailsVisible.value ? 'caption-text-hidden' : '');
+
+// Determines whether the user can edit the artwork's details.
+const canEdit = computed(() => artwork.value && artwork.value.Author.Alias === us.user?.Alias);
+
+const canFollow = computed(() => artwork.value && artwork.value.Author.Alias !== us.user?.Alias && !artwork.value.Author.FollowedByUser);
 
 // a valid target to scroll to
 const imageTarget = getScrollTarget(document.getElementById('image') as HTMLElement);

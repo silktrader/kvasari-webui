@@ -34,7 +34,7 @@
             <q-item-section avatar>
               <q-avatar size='48px'>
                 <img src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'
-                     class='user-avatar'>
+                     alt='User Avatar' class='user-avatar'>
               </q-avatar>
             </q-item-section>
             <!--                  <q-icon :name='scope.opt.icon' />-->

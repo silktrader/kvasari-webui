@@ -2,13 +2,18 @@ import { boot } from 'quasar/wrappers';
 import axios, { AxiosInstance } from 'axios';
 import { useUserStore } from 'stores/user-store';
 
+// Describes a server received bad request error; timestamps are ignored.
 export class BadRequestError {
   constructor(public Message: string, public Timestamp: Date) {}
 }
 
+// Describes a server received internal server error; timestamps are ignored.
 export class InternalServerError {
   constructor(public Error: string, public Timestamp: Date) {}
 }
+
+// Describes a server received not found error.
+export class NotFoundError {}
 
 declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
@@ -61,6 +66,8 @@ api.interceptors.response.use(
             error.response.data.Timestamp
           )
         );
+      case 404:
+        return Promise.reject(new NotFoundError());
       case 500:
         return Promise.reject(
           new InternalServerError(

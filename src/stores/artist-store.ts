@@ -11,17 +11,13 @@ export interface UploadedArtwork {
   Reactions: number;
 }
 
-export interface User {
-  Id: string;
+interface UserRelation {
   Alias: string;
   Name: string;
-}
-
-interface UserRelation extends User {
   Date: Date;
 }
 
-interface Artist {
+export interface Artist {
   Alias: string;
   Name: string;
   Email: string;
@@ -115,7 +111,7 @@ export const useArtistStore = defineStore('artist', () => {
   }
 
   return {
-    artist: artist,
+    artist: readonly(artist),
     artworks: readonly(artworks),
     followers,
     followed,
