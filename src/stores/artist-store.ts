@@ -110,6 +110,12 @@ export const useArtistStore = defineStore('artist', () => {
     artist.Followers += 1;
   }
 
+  // Remove the authenticated user as an artist's follower, updating relevant variables.
+  function removeUserAsFollower(): void {
+    artist.FollowedByUser = false;
+    artist.Followers -= 1;
+  }
+
   return {
     artist: readonly(artist),
     artworks: readonly(artworks),
@@ -120,5 +126,6 @@ export const useArtistStore = defineStore('artist', () => {
     resetArtworks,
     loadArtworks,
     addUserAsFollower,
+    removeUserAsFollower,
   };
 });

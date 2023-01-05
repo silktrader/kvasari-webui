@@ -78,15 +78,30 @@ export const useUserStore = defineStore('user', () => {
     user.value = { ...user.value, Name: name };
   }
 
-  async function followArtist(alias: string): Promise<void> {
-    if (!user.value) throw new Error('No authenticated user');
+  const noAuthUserError = 'No Authenticated user';
+
+  async function followArtist(target: string): Promise<void> {
+    if (!user.value) throw new Error(noAuthUserError);
     await api.post<{
       Alias: string;
       Followed: Date;
     }>(`/users/${user.value.Alias}/followed`, {
-      TargetAlias: alias,
+      TargetAlias: target,
     });
   }
 
-  return { user, Register, SignIn, SignOut, updateName, followArtist };
+  async function unfollowArtist(target: string): Promise<void> {
+    if (!user.value) throw new Error(noAuthUserError);
+    await api.delete(`/users/${user.value.Alias}/followed/${target}`);
+  }
+
+  return {
+    user,
+    Register,
+    SignIn,
+    SignOut,
+    updateName,
+    followArtist,
+    unfollowArtist,
+  };
 });

@@ -52,7 +52,7 @@
 
             <!-- Relevant controls when viewing another user's profile -->
             <q-btn rounded outline label='Follow' v-if='canFollow' @click='follow()'></q-btn>
-            <q-btn rounded outline label='Unfollow' v-if='canUnfollow'></q-btn>
+            <q-btn rounded outline label='Unfollow' v-if='canUnfollow' @click='unfollow()'></q-btn>
 
           </div>
           <span class='alias'>@{{ artist.Alias }}</span>
@@ -246,7 +246,26 @@ function follow(): void {
     console.error(e);
     q.notify({
       type: 'negative',
-      message: `A problem arose while attemptint to follow <b>${artist.value.Alias}</b>`,
+      message: `A problem arose while attempting to follow <b>${artist.value.Alias}</b>`,
+      html: true
+    });
+  }
+}
+
+function unfollow(): void {
+  try {
+    us.unfollowArtist(artist.value.Alias);
+    as.removeUserAsFollower();
+    q.notify({
+      type: 'positive',
+      message: `You stopped following <b>${artist.value.Alias}</b>.`,
+      html: true
+    });
+  } catch (e) {
+    console.error(e);
+    q.notify({
+      type: 'negative',
+      message: `A problem arose while attempting to unfollow <b>${artist.value.Alias}</b>`,
       html: true
     });
   }
