@@ -1,31 +1,40 @@
 <template>
-  <q-page>
-    <div class='profile-container'>
-      <ul>
-        <li v-for='artwork in streamStore.artworks' :key='artwork.Id'
-            @click='navigateTo(artwork.Id)'>
-          <img :src='artwork.PictureURL' :alt='artwork.Description' />
-          <div class='overlay'>
-            <div class='metadata'>
-              <div class='metadata-space'></div>
-              <span class='title'>{{ artwork.Title }}</span>
-              <span class='artist'>{{ artwork.AuthorName }}</span>
-              <div class='metadata-space'></div>
-              <span class='added'>added {{ timeAgo(artwork.Added) }} days ago</span>
-            </div>
-            <div class='feedback'>
-              <div>
-                <q-icon size='md' name='comment'></q-icon>
-                <span>{{ artwork.Comments }}</span>
-              </div>
-              <div>
-                <q-icon size='md' name='reviews'></q-icon>
-                <span>{{ artwork.Reactions }}</span>
-              </div>
-            </div>
-          </div>
-        </li>
-      </ul>
+  <q-page class='stream-container'>
+    <header class='stream-header'>
+      <q-btn-group outline>
+        <q-btn outline color='accent' label='Latest' icon='schedule' />
+        <q-btn outline color='accent' label='Random' icon='shuffle' disable />
+        <q-btn outline color='accent' label='Most Commented' icon='comment' disable />
+      </q-btn-group>
+    </header>
+    <div class='previews'>
+      <artwork-preview-component v-for='artwork in streamStore.artworks' :key='artwork.Id'
+                                 :artwork='artwork' :author='us.user'></artwork-preview-component>
+      <!--      <ul>-->
+      <!--        <li v-for='artwork in streamStore.artworks' :key='artwork.Id'-->
+      <!--            @click='navigateTo(artwork.Id)'>-->
+      <!--          <img :src='artwork.PictureURL' :alt='artwork.Description' />-->
+      <!--          <div class='overlay'>-->
+      <!--            <div class='metadata'>-->
+      <!--              <div class='metadata-space'></div>-->
+      <!--              <span class='title'>{{ artwork.Title }}</span>-->
+      <!--              <span class='artist'>{{ artwork.AuthorName }}</span>-->
+      <!--              <div class='metadata-space'></div>-->
+      <!--              <span class='added'>added {{ timeAgo(artwork.Added) }} days ago</span>-->
+      <!--            </div>-->
+      <!--            <div class='feedback'>-->
+      <!--              <div>-->
+      <!--                <q-icon size='md' name='comment'></q-icon>-->
+      <!--                <span>{{ artwork.Comments }}</span>-->
+      <!--              </div>-->
+      <!--              <div>-->
+      <!--                <q-icon size='md' name='reviews'></q-icon>-->
+      <!--                <span>{{ artwork.Reactions }}</span>-->
+      <!--              </div>-->
+      <!--            </div>-->
+      <!--          </div>-->
+      <!--        </li>-->
+      <!--      </ul>-->
 
     </div>
 
@@ -39,6 +48,7 @@ import { useStreamStore } from 'stores/stream-store';
 import { date } from 'quasar';
 import { useRouter } from 'vue-router';
 import { useUserStore } from 'stores/user-store';
+import ArtworkPreviewComponent from 'components/ArtworkPreviewComponent.vue';
 
 const router = useRouter();
 const streamStore = useStreamStore();
@@ -67,21 +77,26 @@ function navigateTo(artworkId: string): void {
 
 $border-radius: 3px;
 
-.profile-container {
-  padding-top: $toolbar-padding;
+.stream-container {
+  padding-top: $toolbar-padding + 30;
 }
 
-ul {
+.stream-header {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  align-items: flex-end;
+  padding-left: 20%;
+}
+
+.previews {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
-  list-style: none;
-  margin-block: 0;
-  margin-inline: 0;
-  padding-inline: 0;
+  gap: 16px;
   padding-left: $padding;
   padding-right: $padding;
-  padding-top: $padding;
+  padding-top: $toolbar-padding;
 }
 
 li {

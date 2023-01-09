@@ -84,10 +84,10 @@
 
     <div>
       <div class='uploads-previews'>
-        <div v-if='isUser'>
+        <div class='uploader' v-if='isUser'>
           <q-uploader
             flat
-            label='Upload New Artwork'
+            label='Upload Artwork'
             :accept='acceptableFormats.join(", ")'
             :max-file-size='maxFileSize'
             url='http://localhost:3000/artworks'
@@ -370,95 +370,17 @@ $border-radius: 3px;
   padding-top: $padding;
 }
 
+.uploader {
+  height: 30vh;
+}
+
+.q-uploader {
+  height: 30vh;
+}
+
 .spacer {
   flex-grow: 10;
 }
 
-//li {
-//  height: 350px;
-//  cursor: pointer;
-//  position: relative;
-//  flex: 1 1 auto;
-//}
-//
-//li img {
-//  object-fit: cover;
-//  width: 100%;
-//  height: 100%;
-//  vertical-align: middle;
-//  border-radius: $border-radius;
-//}
-//
-//ul::after {
-//  content: "";
-//  flex-grow: 100;
-//}
-//
-//.overlay {
-//  position: absolute;
-//  bottom: 0;
-//  left: 0;
-//  z-index: 10;
-//  height: 100%;
-//  width: 100%;
-//  background: rgba(0, 0, 0, .5);
-//  color: antiquewhite;
-//  padding: 16px;
-//  pointer-events: all;
-//  border-radius: $border-radius;
-//  display: flex;
-//  align-items: center;
-//  justify-content: space-between;
-//  opacity: 0%;
-//  transition: opacity 0.5s ease-in-out;
-//  -moz-transition: opacity 0.5s ease-in-out;
-//  -webkit-transition: opacity 0.5s ease-in-out;
-//}
-//
-//.overlay:hover {
-//  opacity: 100%;
-//  transition: opacity .5s ease-in-out;
-//}
-//
-//.metadata {
-//  display: flex;
-//  height: 100%;
-//  flex-direction: column;
-//  font-family: 'Arapey', serif;
-//}
-//
-//.metadata-space {
-//  flex-grow: 5;
-//}
-//
-//.title {
-//  font-size: x-large;
-//}
-//
-//.artist {
-//  color: #C8BCAC;
-//  font-size: large;
-//}
-//
-//.added {
-//  flex-grow: 1;
-//  font-style: italic;
-//  color: #C8BCAC;
-//  font-size: small;
-//  padding-left: 5px;
-//}
-//
-//.feedback {
-//  font-family: 'Montserrat', sans-serif;
-//  display: flex;
-//  gap: 10px;
-//  align-self: flex-end;
-//}
-//
-//.feedback div {
-//  display: flex;
-//  flex-direction: column;
-//  align-items: center;
-//}
 
 </style>

@@ -56,6 +56,10 @@ header {
   //pointer-events: none;
 }
 
+.router-link-active {
+  background-color: $primary;
+}
+
 .header-interactive {
   opacity: 0.5;
   background-image: -webkit-linear-gradient(#202327, rgba(32, 35, 39, 0.738) 19%, rgba(32, 35, 39, 0.541) 34%, rgba(32, 35, 39, 0.382) 47%, rgba(32, 35, 39, 0.278) 56.5%, rgba(32, 35, 39, 0.194) 65%, rgba(32, 35, 39, 0.126) 73%, rgba(32, 35, 39, 0.075) 80.2%, rgba(32, 35, 39, 0.042) 86.1%, rgba(32, 35, 39, 0.021) 91%, rgba(32, 35, 39, 0.008) 95.2%, rgba(32, 35, 39, 0.002) 98.2%, rgba(32, 35, 39, 0));

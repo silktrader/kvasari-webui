@@ -26,29 +26,27 @@
 
 <script setup lang='ts'>
 
-import { Artist, UploadedArtwork } from 'stores/artist-store';
+import { UploadedArtwork } from 'stores/artist-store';
 import { computed, onBeforeUnmount, onMounted, PropType, ref } from 'vue';
 import utilities from 'src/utilities/utilities';
 import { useRouter } from 'vue-router';
-import { api } from 'boot/axios';
-import { useUserStore } from 'stores/user-store';
+import { useArtworkStore } from 'stores/artwork-store';
 
 const props = defineProps({
   artwork: Object as PropType<UploadedArtwork>,
-  author: Object as PropType<Artist>
+  author: Object as PropType<{ Name: string }>
 });
 
 const router = useRouter();
-const authStore = useUserStore();
-
-const imgUrl = ref<string>('');
+const as = useArtworkStore();
+const imgUrl = ref<string>();
 
 onMounted(async () => {
-  imgUrl.value = URL.createObjectURL(await api.get(`http://localhost:3000/artworks/${props.artwork?.Id}/image`, { responseType: 'blob' }).then(response => response.data));
+  if (props.artwork) imgUrl.value = URL.createObjectURL(await as.getImageBlob(props.artwork.Id));
 });
 
 onBeforeUnmount(() => {
-  URL.revokeObjectURL(imgUrl.value);
+  if (imgUrl.value) URL.revokeObjectURL(imgUrl.value);
 });
 
 const imgAlt = computed(() => {

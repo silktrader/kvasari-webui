@@ -39,5 +39,13 @@ export const useArtworkStore = defineStore('artwork', () => {
     return (await api.get<Artwork>(`/artworks/${id}/data`)).data;
   }
 
-  return { artwork: readonly(artwork), setArtwork };
+  async function getImageBlob(artworkId: string): Promise<Blob | MediaSource> {
+    return (
+      await api.get(`http://localhost:3000/artworks/${artworkId}/image`, {
+        responseType: 'blob',
+      })
+    ).data;
+  }
+
+  return { artwork: readonly(artwork), setArtwork, getImageBlob };
 });
