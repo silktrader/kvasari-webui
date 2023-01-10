@@ -47,5 +47,13 @@ export const useArtworkStore = defineStore('artwork', () => {
     ).data;
   }
 
-  return { artwork: readonly(artwork), setArtwork, getImageBlob };
+  async function updateTitle(newTitle: string) {
+    if (!artwork.value) {
+      throw new Error('Undefined artwork');
+    }
+    await api.put(`/artworks/${artwork.value.Id}/title`, { Title: newTitle });
+    artwork.value.Title = newTitle;
+  }
+
+  return { artwork: readonly(artwork), setArtwork, getImageBlob, updateTitle };
 });

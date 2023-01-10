@@ -3,12 +3,14 @@
   <section class='preview' @click='navigateTo(artwork.Id)'>
     <img :src='imgUrl' :alt='imgAlt' />
     <aside class='overlay'>
+
       <section class='metadata'>
         <div class='metadata-space'></div>
         <span class='title'>{{ artwork.Title }}</span>
         <div class='metadata-space'></div>
         <span class='added'>added {{ formatRelativeDate(artwork.Added) }}</span>
       </section>
+
       <section class='feedback'>
         <div>
           <q-icon size='md' name='comment'></q-icon>
@@ -19,6 +21,22 @@
           <span>{{ artwork.Reactions }}</span>
         </div>
       </section>
+
+      <!--      <section class='controls'>-->
+      <!--        <q-btn round color='primary' icon='more_vert' @click.stop>-->
+      <!--          <q-menu>-->
+      <!--            <q-list style='min-width: 100px'>-->
+      <!--              <q-item clickable v-close-popup @click='onEdit'>-->
+      <!--                <q-item-section>Edit</q-item-section>-->
+      <!--              </q-item>-->
+      <!--              <q-item clickable v-close-popup>-->
+      <!--                <q-item-section>Delete</q-item-section>-->
+      <!--              </q-item>-->
+      <!--            </q-list>-->
+      <!--          </q-menu>-->
+      <!--        </q-btn>-->
+      <!--      </section>-->
+
     </aside>
   </section>
 
@@ -61,6 +79,9 @@ function formatRelativeDate(date: Date): string {
   return utilities.FormatRelativeDate(date);
 }
 
+function onEdit() {
+  console.log('Unimplemented');
+}
 
 </script>
 

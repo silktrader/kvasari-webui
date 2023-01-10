@@ -10,7 +10,7 @@
       </q-btn>
       <div class='caption-text' :class='captionTextClass'>
         <span>{{ artwork.Title || 'Untitled' }}</span>
-        <span class='author-name' v-show='artwork.AuthorName'>, by {{ artwork.AuthorName }}</span>
+        <span class='author-name' v-show='artwork.Author.Name'>, by {{ artwork.Author.Name }}</span>
       </div>
       <div style='flex-grow: 10'></div>
     </div>
@@ -20,11 +20,46 @@
   <section class='artwork-details' id='details' v-if='artwork'>
 
     <div class='details-header'>
-      <q-btn square flat icon='close' class='caption-box close-button' @click='scrollToImage'>
-      </q-btn>
+      <q-btn square flat icon='close' class='caption-box close-button' @click='scrollToImage' />
       <span class='details-title'>
         {{ detailsTitle }}
       </span>
+
+      <!--Title Editing-->
+      <q-btn round outline color='accent' icon='edit' class='title-edit' v-if='isEditing'>
+        <q-popup-edit v-model='artwork.Title'
+                      :cover='false'
+                      :offset='[0, 10]'
+                      v-slot='scope'
+                      :validate='v => !!v'
+                      @save='updateTitle'>
+          <q-input color='accent'
+                   v-model='scope.value'
+                   dense
+                   autofocus
+                   counter
+                   spellcheck='false'
+                   @keyup.enter='scope.set'
+                   style='width: 50ch'>
+            <template v-slot:prepend>
+              <q-icon name='edit' color='accent' />
+            </template>
+            <template v-slot:after>
+              <q-btn
+                flat dense icon='cancel'
+                @click.stop.prevent='scope.cancel'
+              />
+
+              <q-btn
+                flat dense icon='check_circle'
+                @click.stop.prevent='scope.set'
+                :disable='scope.validate(scope.value) === false || scope.initialValue === scope.value'
+              />
+            </template>
+          </q-input>
+        </q-popup-edit>
+      </q-btn>
+
     </div>
 
     <section class='details-description' v-intersection='onShowDetails'>
@@ -38,14 +73,19 @@
           <img src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'
                class='artist-avatar' alt='User Avatar'>
         </q-avatar>
-        <aside class='user-name-alias'>
+
+        <aside class='user-name-alias' v-if='isOwner'>
+          <span><em>You</em></span>
+        </aside>
+
+        <aside class='user-name-alias' v-else>
           <span>{{ artwork.Author.Name }}</span>
           <span class='artist-alias'>@{{ artwork.Author.Alias }}</span>
         </aside>
 
         <!-- Owner or viewer contextual controls -->
         <q-toggle
-          v-if='canEdit'
+          v-if='isOwner'
           v-model='isEditing'
           size='xl'
           color='accent'
@@ -89,9 +129,9 @@ import { storeToRefs } from 'pinia';
 const props = defineProps<{ artworkId: string }>();
 const q = useQuasar();
 const us = useUserStore();
-const artworkStore = useArtworkStore();
+const as = useArtworkStore();
 
-const { artwork } = storeToRefs(artworkStore);
+const { artwork } = storeToRefs(as);
 
 // Determines whether the artwork is being edited by the user, which triggers various controls.
 const isEditing = ref(false);
@@ -105,7 +145,7 @@ const { getScrollTarget, setVerticalScrollPosition } = scroll;
 
 // load the artwork's data on creation
 try {
-  artworkStore.setArtwork(props.artworkId);
+  as.setArtwork(props.artworkId);
 } catch (error) {
   if (error instanceof NotFoundError) {
     q.notify({ type: 'negative', message: 'Artwork not found.' });
@@ -135,14 +175,16 @@ const detailsTitle = computed(() => {
 const captionBox = computed(() => detailsVisible.value ? 'inactive-box' : 'active-box');
 const captionTextClass = computed(() => detailsVisible.value ? 'caption-text-hidden' : '');
 
-// Determines whether the user can edit the artwork's details.
-const canEdit = computed(() => artwork.value && artwork.value.Author.Alias === us.user?.Alias);
+// Determines whether the viewing user matches the artwork's artist.
+const isOwner = computed(() => artwork.value && artwork.value.Author.Alias === us.user?.Alias);
 
-const canFollow = computed(() => artwork.value && artwork.value.Author.Alias !== us.user?.Alias && !artwork.value.Author.FollowedByUser);
+// Determines whether the author can be followed by the user.
+const canFollow = computed(() => !isOwner.value && !artwork.value?.Author.FollowedByUser);
 
 // a valid target to scroll to
 const imageTarget = getScrollTarget(document.getElementById('image') as HTMLElement);
 
+// tk substitute
 onMounted(async () => {
   imgUrl.value = URL.createObjectURL(await api.get(`http://localhost:3000/artworks/${props.artworkId}/image`, { responseType: 'blob' }).then(response => response.data));
 });
@@ -174,6 +216,23 @@ function formatType(type: string): string {
 
 function formatRelativeDate(date: Date): string {
   return utilities.FormatRelativeDate(date);
+}
+
+// Attempts to edit the artwork's title.
+async function updateTitle(newTitle: string): Promise<void> {
+  try {
+    await as.updateTitle(newTitle);
+    q.notify({
+      type: 'positive',
+      message: `Title changed to <b>${newTitle}</b>`,
+      html: true
+    });
+  } catch (e) {
+    q.notify({
+      type: 'negative',
+      message: 'Couldn\'t update the artwork\'s title'
+    });
+  }
 }
 
 </script>
@@ -284,15 +343,21 @@ function formatRelativeDate(date: Date): string {
 .details-header {
   display: flex;
   flex-direction: row;
+  gap: 16px;
   width: 100%;
   font-family: $text-serif;
   z-index: 10;
 }
 
 .details-title {
-  margin-left: 1rem;
   font-size: xx-large;
   font-family: $text-serif;
+}
+
+.title-edit {
+  align-self: center;
+  width: 2.5rem;
+  height: 2.5rem;
 }
 
 // description

@@ -10,31 +10,6 @@
     <div class='previews'>
       <artwork-preview-component v-for='artwork in streamStore.artworks' :key='artwork.Id'
                                  :artwork='artwork' :author='us.user'></artwork-preview-component>
-      <!--      <ul>-->
-      <!--        <li v-for='artwork in streamStore.artworks' :key='artwork.Id'-->
-      <!--            @click='navigateTo(artwork.Id)'>-->
-      <!--          <img :src='artwork.PictureURL' :alt='artwork.Description' />-->
-      <!--          <div class='overlay'>-->
-      <!--            <div class='metadata'>-->
-      <!--              <div class='metadata-space'></div>-->
-      <!--              <span class='title'>{{ artwork.Title }}</span>-->
-      <!--              <span class='artist'>{{ artwork.AuthorName }}</span>-->
-      <!--              <div class='metadata-space'></div>-->
-      <!--              <span class='added'>added {{ timeAgo(artwork.Added) }} days ago</span>-->
-      <!--            </div>-->
-      <!--            <div class='feedback'>-->
-      <!--              <div>-->
-      <!--                <q-icon size='md' name='comment'></q-icon>-->
-      <!--                <span>{{ artwork.Comments }}</span>-->
-      <!--              </div>-->
-      <!--              <div>-->
-      <!--                <q-icon size='md' name='reviews'></q-icon>-->
-      <!--                <span>{{ artwork.Reactions }}</span>-->
-      <!--              </div>-->
-      <!--            </div>-->
-      <!--          </div>-->
-      <!--        </li>-->
-      <!--      </ul>-->
 
     </div>
 
