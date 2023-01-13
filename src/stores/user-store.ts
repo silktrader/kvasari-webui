@@ -95,6 +95,16 @@ export const useUserStore = defineStore('user', () => {
     await api.delete(`/users/${user.value.Alias}/followed/${target}`);
   }
 
+  async function blockUser(data: { TargetAlias: string }): Promise<void> {
+    if (!user.value) throw new Error(noAuthUserError);
+    await api.post(`/users/${user.value.Alias}/bans`, data);
+  }
+
+  async function unblockUser(target: string): Promise<void> {
+    if (!user.value) throw new Error(noAuthUserError);
+    await api.delete(`/users/${user.value.Alias}/bans/${target}`);
+  }
+
   return {
     user,
     Register,
@@ -103,5 +113,7 @@ export const useUserStore = defineStore('user', () => {
     updateName,
     followArtist,
     unfollowArtist,
+    blockUser,
+    unblockUser,
   };
 });

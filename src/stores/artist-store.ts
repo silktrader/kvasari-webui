@@ -29,6 +29,7 @@ export interface Artist {
   Comments: number;
   FollowsUser: boolean;
   FollowedByUser: boolean;
+  BlockedByUser: boolean;
 }
 
 export const useArtistStore = defineStore('artist', () => {
@@ -116,6 +117,18 @@ export const useArtistStore = defineStore('artist', () => {
     artist.Followers -= 1;
   }
 
+  // Updates the artist's details, on being blocked by the viewing user.
+  function blockUser(): void {
+    artist.FollowsUser = false;
+    artist.FollowedByUser = false;
+    artist.Followers -= 1;
+    artist.BlockedByUser = true;
+  }
+
+  function unblockUser(): void {
+    artist.BlockedByUser = false;
+  }
+
   return {
     artist: readonly(artist),
     artworks: readonly(artworks),
@@ -127,5 +140,7 @@ export const useArtistStore = defineStore('artist', () => {
     loadArtworks,
     addUserAsFollower,
     removeUserAsFollower,
+    blockUser,
+    unblockUser,
   };
 });

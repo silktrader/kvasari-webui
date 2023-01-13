@@ -4,6 +4,7 @@
     <div class='profile-header'>
       <div class='header-cover'></div>
       <div class='header-cover-gradient'></div>
+
       <section class='user-details'>
         <q-avatar size='120px'>
           <img src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'
@@ -52,7 +53,29 @@
 
             <!-- Relevant controls when viewing another user's profile -->
             <q-btn rounded outline label='Follow' v-if='canFollow' @click='follow()'></q-btn>
-            <q-btn rounded outline label='Unfollow' v-if='canUnfollow' @click='unfollow()'></q-btn>
+            <q-btn rounded outline label='Unfollow' v-else-if='canUnfollow' @click='unfollow()'></q-btn>
+            <q-btn rounded outline label='Unblock' v-else-if='canUnblock' @click='unblock()'></q-btn>
+
+            <section v-if='!isUser'>
+              <q-btn round flat icon='more_vert' @click.stop>
+                <q-menu>
+                  <q-list>
+                    <q-item clickable v-ripple v-close-popup @click='block' v-if='!canUnblock'>
+                      <q-item-section avatar>
+                        <q-icon name='block' />
+                      </q-item-section>
+                      <q-item-section>Block</q-item-section>
+                    </q-item>
+                    <q-item clickable v-ripple disable v-close-popup>
+                      <q-item-section avatar>
+                        <q-icon name='report' />
+                      </q-item-section>
+                      <q-item-section>Report</q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-menu>
+              </q-btn>
+            </section>
 
           </div>
           <span class='alias'>@{{ artist.Alias }}</span>
@@ -168,10 +191,13 @@ watch(
 const isUser = computed(() => as.artist.Alias === us.user?.Alias);
 
 // determines whether the viewing user can follow the target; banned users won't view the profile at all
-const canFollow = computed<boolean>(() => !isUser.value && !artist.value.FollowedByUser);
+const canFollow = computed<boolean>(() => !isUser.value && !artist.value.FollowedByUser && !artist.value.BlockedByUser);
 
 // determines whether the viewing user can unfollow the target
 const canUnfollow = computed<boolean>(() => !isUser.value && artist.value.FollowedByUser);
+
+// determines whether the viewing user is already blocking the user and can therefore unblock them
+const canUnblock = computed<boolean>(() => !isUser.value && artist.value.BlockedByUser);
 
 // Attempts to perform a name change, updating stores on success.
 async function saveUserName(newName: string, oldName: string): Promise<void> {
@@ -269,12 +295,49 @@ function unfollow(): void {
     console.error(e);
     q.notify({
       type: 'negative',
-      message: `A problem arose while attempting to unfollow <b>${artist.value.Alias}</b>`,
+      message: `A problem arose while unfollowing <b>${artist.value.Alias}</b>`,
       html: true
     });
   }
 }
 
+function block(): void {
+  try {
+    us.blockUser({ TargetAlias: artist.value.Alias });
+    as.blockUser();
+    q.notify({
+      type: 'positive',
+      message: `You blocked <b>${artist.value.Alias}</b> from viewing your content and interacting with you.`,
+      html: true
+    });
+  } catch (e) {
+    console.error(e);
+    q.notify({
+      type: 'negative',
+      message: `A problem arose while blocking <b>${artist.value.Alias}</b>`,
+      html: true
+    });
+  }
+}
+
+function unblock(): void {
+  try {
+    us.unblockUser(artist.value.Alias);
+    as.unblockUser();
+    q.notify({
+      type: 'positive',
+      message: `You unblocked <b>${artist.value.Alias}</b>.`,
+      html: true
+    });
+  } catch (e) {
+    console.error(e);
+    q.notify({
+      type: 'negative',
+      message: `A problem arose while unblocking <b>${artist.value.Alias}</b>`,
+      html: true
+    });
+  }
+}
 
 </script>
 
@@ -321,6 +384,7 @@ $border-radius: 3px;
 .user-details {
   display: flex;
   flex-direction: row;
+  min-width: 50%; // nasty hack to ensure the same remains the same
   gap: 16px;
   padding: 16px;
   align-items: center;
