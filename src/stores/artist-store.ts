@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { reactive, readonly, ref } from 'vue';
 import { api } from 'boot/axios';
 import { ArtworkPreview } from 'src/models/artwork-preview';
+import { useUserStore } from 'stores/user-store';
 
 interface UserRelation {
   Alias: string;
@@ -26,7 +27,6 @@ export interface Artist {
 
 export const useArtistStore = defineStore('artist', () => {
   const artist = reactive<Artist>({} as Artist);
-
   const followers = ref<UserRelation[]>([]);
   const followed = ref<UserRelation[]>([]);
 
@@ -61,36 +61,43 @@ export const useArtistStore = defineStore('artist', () => {
       params: {
         artist: userAlias,
         latest: new Date().toISOString(),
-        since: earliestArtworkDate.value,
-      },
+        since: earliestArtworkDate.value
+      }
     });
 
     // add artworks in reverse chronological order
     // not deleting the ID property inside the object, for pure convenience
     const newArtworks = new Map<string, ArtworkPreview>();
-    response.data.New.forEach(newArtwork =>
-      newArtworks.set(newArtwork.Id, newArtwork)
-    );
+    response.data.New.forEach(newArtwork => newArtworks.set(newArtwork.Id, newArtwork));
 
     // remove deleted artworks from current collection
-    response.data.Deleted.forEach(deletedId =>
-      artworks.value.delete(deletedId)
-    );
+    response.data.Deleted.forEach(deletedId => artworks.value.delete(deletedId));
 
     // add newly request artworks to current collection
-    response.data.Requested.forEach(requestedArtwork =>
-      artworks.value.set(requestedArtwork.Id, requestedArtwork)
-    );
+    response.data.Requested.forEach(requestedArtwork => artworks.value.set(requestedArtwork.Id, requestedArtwork));
 
     // merge the new items with the current collection to update the latter
-    artworks.value = new Map<string, ArtworkPreview>([
-      ...newArtworks,
-      ...artworks.value,
-    ]);
+    artworks.value = new Map<string, ArtworkPreview>([...newArtworks, ...artworks.value]);
 
     // update timestamps to chain future requests
-    earliestArtworkDate.value =
-      response.data.Requested.at(-1)?.Added ?? earliestArtworkDate.value;
+    earliestArtworkDate.value = response.data.Requested.at(-1)?.Added ?? earliestArtworkDate.value;
+  }
+
+  function addArtwork(id: string, format: string, updated: string): void {
+    const { user: { Alias, Name } } = useUserStore(); // not reactive
+    const newArtworks = new Map<string, ArtworkPreview>([[id, {
+      Added: updated,
+      Updated: updated,
+      Format: format,
+      Id: id,
+      AuthorName: Name,
+      AuthorAlias: Alias,
+      Comments: 0,
+      Reactions: 0
+    }]]);
+
+    // add the recently uploaded artwork to a copy of the currently displayed artworks, without sorting
+    artworks.value = new Map<string, ArtworkPreview>([...newArtworks, ...artworks.value]);
   }
 
   function updateName(newName: string) {
@@ -130,9 +137,10 @@ export const useArtistStore = defineStore('artist', () => {
     updateName,
     resetArtworks,
     loadArtworks,
+    addArtwork,
     addUserAsFollower,
     removeUserAsFollower,
     blockUser,
-    unblockUser,
+    unblockUser
   };
 });

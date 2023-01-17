@@ -65,18 +65,14 @@ export const useArtworkStore = defineStore('artwork', () => {
   }
 
   async function getComments() {
-    comments.value = (
-      await api.get<ArtworkComment[]>(`/artworks/${artwork.value?.Id}/comments`)
-    ).data;
+    comments.value = (await api.get<ArtworkComment[]>(`/artworks/${artwork.value?.Id}/comments`)).data;
   }
 
   async function addComment(contents: string): Promise<void> {
     const { user } = useUserStore(); // this isn't reactive
-    if (user == null) throw new Error();
-    const response = await api.post<{ Id: string; Date: Date }>(
-      `/artworks/${artwork.value?.Id}/comments`,
-      { Comment: contents }
-    );
+    const response = await api.post<{ Id: string; Date: Date }>(`/artworks/${artwork.value?.Id}/comments`, {
+      Comment: contents,
+    });
     comments.value.push({
       Id: response.data.Id,
       AuthorAlias: user.Alias,

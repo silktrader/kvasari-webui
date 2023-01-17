@@ -3,7 +3,8 @@ export interface ArtworkPreview {
   Id: string;
   Title?: string;
   Format: string;
-  Added: string;
+  Added?: string;
+  Updated: string;
   Comments: number;
   Reactions: number;
   AuthorName: string;

@@ -7,8 +7,9 @@
 
       <section class='user-details'>
         <q-avatar size='120px'>
-          <img src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'
-               class='user-avatar' alt='User Profile Cover'>
+          <img alt='User Profile Cover'
+               class='user-avatar'
+               src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'>
         </q-avatar>
 
         <section class='user-name-alias'>
@@ -16,35 +17,35 @@
             <span>{{ artist.Name }}</span>
 
             <!-- Name editing shortcut for the profile owner -->
-            <q-btn round outline icon='las la-user-edit' v-if='isUser'>
-              <q-popup-edit v-model='artist.Name'
+            <q-btn v-if='isUser' icon='las la-user-edit' outline round>
+              <q-popup-edit v-slot='scope'
+                            v-model='artist.Name'
                             :cover='false'
                             :offset='[0, 10]'
-                            v-slot='scope'
                             :validate='v => v && v.length > 6'
                             @save='saveUserName'>
-                <q-input color='accent'
-                         v-model='scope.value'
-                         dense
-                         autofocus
-                         counter
-                         spellcheck='false'
-                         @keyup.enter='scope.set'
+                <q-input v-model='scope.value'
                          :rules="[val => scope.validate(val) || 'More than six characters required']"
-                         style='width: 35ch'>
+                         autofocus
+                         color='accent'
+                         counter
+                         dense
+                         spellcheck='false'
+                         style='width: 35ch'
+                         @keyup.enter='scope.set'>
                   <template v-slot:prepend>
-                    <q-icon name='edit' color='accent' />
+                    <q-icon color='accent' name='edit' />
                   </template>
                   <template v-slot:after>
                     <q-btn
-                      flat dense icon='cancel'
+                      dense flat icon='cancel'
                       @click.stop.prevent='scope.cancel'
                     />
 
                     <q-btn
-                      flat dense icon='check_circle'
+                      :disable='scope.validate(scope.value) === false || scope.initialValue === scope.value' dense flat
+                      icon='check_circle'
                       @click.stop.prevent='scope.set'
-                      :disable='scope.validate(scope.value) === false || scope.initialValue === scope.value'
                     />
                   </template>
                 </q-input>
@@ -52,21 +53,21 @@
             </q-btn>
 
             <!-- Relevant controls when viewing another user's profile -->
-            <q-btn rounded outline label='Follow' v-if='canFollow' @click='follow()'></q-btn>
-            <q-btn rounded outline label='Unfollow' v-else-if='canUnfollow' @click='unfollow()'></q-btn>
-            <q-btn rounded outline label='Unblock' v-else-if='canUnblock' @click='unblock()'></q-btn>
+            <q-btn v-if='canFollow' label='Follow' outline rounded @click='follow()'></q-btn>
+            <q-btn v-else-if='canUnfollow' label='Unfollow' outline rounded @click='unfollow()'></q-btn>
+            <q-btn v-else-if='canUnblock' label='Unblock' outline rounded @click='unblock()'></q-btn>
 
             <section v-if='!isUser'>
-              <q-btn round flat icon='more_vert' @click.stop>
+              <q-btn flat icon='more_vert' round @click.stop>
                 <q-menu>
                   <q-list>
-                    <q-item clickable v-ripple v-close-popup @click='block' v-if='!canUnblock'>
+                    <q-item v-if='!canUnblock' v-close-popup v-ripple clickable @click='block'>
                       <q-item-section avatar>
                         <q-icon name='block' />
                       </q-item-section>
                       <q-item-section>Block</q-item-section>
                     </q-item>
-                    <q-item clickable v-ripple disable v-close-popup>
+                    <q-item v-close-popup v-ripple clickable disable>
                       <q-item-section avatar>
                         <q-icon name='report' />
                       </q-item-section>
@@ -87,14 +88,14 @@
         <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.Following }}</b> Following</span></q-btn>
         <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.Artworks }}</b> Artworks</span></q-btn>
         <span style='flex-grow: 3'></span>
-        <q-btn flat no-caps dense>
+        <q-btn dense flat no-caps>
           <span class='user-stat-label'>
             <b>{{ artist.Comments }}</b>
             <q-icon name='comment' />
           </span>
         </q-btn>
 
-        <q-btn flat no-caps dense>
+        <q-btn dense flat no-caps>
           <span class='user-stat-label'>
             <b>{{ artist.Reactions }}</b>
             <q-icon name='recommend' />
@@ -107,21 +108,24 @@
 
     <div>
       <div class='uploads-previews'>
-        <div class='uploader' v-if='isUser'>
+        <div v-if='isUser' class='uploader'>
           <q-uploader
-            flat
-            label='Upload Artwork'
+            ref='uploader'
             :accept='acceptableFormats.join(", ")'
-            :max-file-size='maxFileSize'
-            url='http://localhost:3000/artworks'
-            field-name='image'
             :form-fields='[
               {name: "alias", value: us.user.Alias}
             ]'
             :headers="[{name: 'Authorization', value: `Bearer ${us.user.Id}`}]"
+            :max-file-size='maxFileSize'
+            field-name='image'
+            flat
+            label='Upload Artwork'
             multiple
-            @rejected='onUploadRejected'
-            @failed='onFailedUpload'
+            url='http://localhost:3000/artworks'
+            @failed='onFailed'
+            @finish='onFinished'
+            @rejected='onRejected'
+            @uploaded='onUploaded'
           />
         </div>
 
@@ -141,8 +145,8 @@
 </template>
 
 
-<script setup lang='ts'>
-import { computed, watch } from 'vue';
+<script lang='ts' setup>
+import { computed, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useUserStore } from 'stores/user-store';
 import { useArtistStore } from 'stores/artist-store';
@@ -155,6 +159,7 @@ const route = useRoute();
 const as = useArtistStore();
 const us = useUserStore();
 const q = useQuasar();
+const uploader = ref();
 
 const maxFileSize = 41943040; // ~40MB
 const acceptableFormats: ReadonlyArray<string> = ['.jpg', '.jpeg', '.png', '.webp'];
@@ -219,12 +224,38 @@ async function saveUserName(newName: string, oldName: string): Promise<void> {
   }
 }
 
-function onUploadRejected(files: ReadonlyArray<{ file: { name: string, size: number } }>): void {
+// Displays the number of bytes in a legible format.
+function formatSize(bytes: number): string {
+  return (bytes / 1048576).toFixed(2) + 'MiB';
+}
+
+function truncateFileName(fileName: string): string {
+  return fileName.length > 16 ? `${fileName.slice(0, 16)}...` : fileName;
+}
+
+type UploadResponse = { files: ReadonlyArray<{ name: string, size: number }>, xhr: { response: string } };
+
+function onUploaded(response: UploadResponse): void {
+  console.log(response);
+  const imageData: { Id: string, Format: string, Updated: string } = JSON.parse(response.xhr.response);
+  q.notify({
+    type: 'positive',
+    message: `Uploaded <b>${response.files.length}</b> files,
+      for a total of ${formatSize(response.files.map(f => f.size).reduce((p, n) => p + n))}`,
+    html: true
+  });
+
+  // update the store
+  as.addArtwork(imageData.Id, imageData.Format, imageData.Updated);
+
+}
+
+function onRejected(files: ReadonlyArray<{ file: { name: string, size: number } }>): void {
   files.forEach(f => {
     if (f.file.size >= maxFileSize) {
       q.notify({
         type: 'negative',
-        message: `<code>${truncateFileName(f.file.name)}</code> is larger than ${(maxFileSize / 1048576).toFixed(2)}MiB`,
+        message: `<code>${truncateFileName(f.file.name)}</code> is larger than ${formatSize(maxFileSize)}`,
         html: true
       });
     }
@@ -245,22 +276,22 @@ function onUploadRejected(files: ReadonlyArray<{ file: { name: string, size: num
         html: true
       });
     }
-
   });
 }
 
-function truncateFileName(fileName: string): string {
-  return fileName.length > 16 ? `${fileName.slice(0, 16)}...` : fileName;
-}
-
-// can't rely on the usual Axios interceptor; interpret the action's response as either a message (BR) or an error (ISE)
-function onFailedUpload(info: { xhr: { response: string } }): void {
+// Triggered by a failed artwork upload attempt.
+// Can't rely on Axios interceptors; interpret the action's response as either a message (BR) or an error (ISE).
+function onFailed(info: { xhr: { response: string } }): void {
   const responseText = JSON.parse(info.xhr.response);
   q.notify({
     type: 'negative',
     message: `A problem arose while uploading the image. <br/>${responseText?.Message ?? responseText?.Error}`,
     html: true
   });
+}
+
+function onFinished(): void {
+  uploader.value.reset();
 }
 
 function follow(): void {
@@ -341,7 +372,7 @@ function unblock(): void {
 
 </script>
 
-<style scoped lang='scss'>
+<style lang='scss' scoped>
 
 @import '../css/quasar.variables.scss';
 

@@ -17,9 +17,8 @@ interface RegisterUserResponse extends User {
 const userKey: Readonly<string> = 'user';
 
 export const useUserStore = defineStore('user', () => {
-  const user = ref<User | null>(
-    JSON.parse(localStorage.getItem(userKey) ?? 'null')
-  );
+  // attempt to set the user on creation, from local storage, fall back to type-safe empty object
+  const user = ref<User>(JSON.parse(localStorage.getItem(userKey) ?? 'null') ?? ({} as User));
 
   // set or clear the storage depending on the user's value
   watch(user, async newUser => {
@@ -27,12 +26,7 @@ export const useUserStore = defineStore('user', () => {
     if (newUser) localStorage.setItem(userKey, JSON.stringify(newUser));
   });
 
-  async function Register(regData: {
-    Alias: string;
-    Password: string;
-    Email: string;
-    Name: string;
-  }) {
+  async function Register(regData: { Alias: string; Password: string; Email: string; Name: string }) {
     try {
       const response = await api.post<RegisterUserResponse>('/users', regData);
 
@@ -65,11 +59,10 @@ export const useUserStore = defineStore('user', () => {
   }
 
   function SignOut() {
-    user.value = null;
+    user.value = {} as User;
   }
 
   async function updateName(name: string): Promise<void> {
-    if (!user.value) return;
     await api.put(`/users/${user.value.Alias}/name`, {
       name,
     });
@@ -81,7 +74,6 @@ export const useUserStore = defineStore('user', () => {
   const noAuthUserError = 'No Authenticated user';
 
   async function followArtist(target: string): Promise<void> {
-    if (!user.value) throw new Error(noAuthUserError);
     await api.post<{
       Alias: string;
       Followed: Date;
