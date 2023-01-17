@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { readonly, ref } from 'vue';
 import { api } from 'boot/axios';
+import { useUserStore } from 'stores/user-store';
+import { ArtworkComment } from 'src/models/artwork-comment';
 
 interface ArtworkResponse {
   Author: Author;
@@ -30,6 +32,7 @@ interface Artwork extends ArtworkResponse {
 
 export const useArtworkStore = defineStore('artwork', () => {
   const artwork = ref<Artwork>();
+  const comments = ref<ArtworkComment[]>([]);
 
   async function setArtwork(id: string) {
     artwork.value = { ...(await getData(id)), Id: id };
@@ -55,5 +58,48 @@ export const useArtworkStore = defineStore('artwork', () => {
     artwork.value.Title = newTitle;
   }
 
-  return { artwork: readonly(artwork), setArtwork, getImageBlob, updateTitle };
+  async function removeArtwork() {
+    await api.delete(`/artworks/:artworkId/${artwork.value?.Id}`);
+    artwork.value = undefined;
+    comments.value = [];
+  }
+
+  async function getComments() {
+    comments.value = (
+      await api.get<ArtworkComment[]>(`/artworks/${artwork.value?.Id}/comments`)
+    ).data;
+  }
+
+  async function addComment(contents: string): Promise<void> {
+    const { user } = useUserStore(); // this isn't reactive
+    if (user == null) throw new Error();
+    const response = await api.post<{ Id: string; Date: Date }>(
+      `/artworks/${artwork.value?.Id}/comments`,
+      { Comment: contents }
+    );
+    comments.value.push({
+      Id: response.data.Id,
+      AuthorAlias: user.Alias,
+      AuthorName: user.Name,
+      Comment: contents,
+      Date: response.data.Date,
+    });
+  }
+
+  async function removeComment(comment: ArtworkComment): Promise<void> {
+    await api.delete(`/artworks/${artwork.value?.Id}/comments/${comment.Id}`);
+    comments.value = [...comments.value.filter(c => c.Id !== comment.Id)];
+  }
+
+  return {
+    artwork: readonly(artwork),
+    setArtwork,
+    getImageBlob,
+    updateTitle,
+    removeArtwork,
+    comments,
+    getComments,
+    addComment,
+    removeComment,
+  };
 });

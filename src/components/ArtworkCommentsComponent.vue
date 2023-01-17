@@ -4,7 +4,7 @@
 
     <header>Comments</header>
 
-    <q-form @submit='onNewComment'>
+    <q-form @submit='addComment'>
       <div class='form-contents'>
         <div class='form-text'>
           <q-input standout autogrow clearable v-model='newComment' type='textarea'
@@ -19,7 +19,7 @@
     </q-form>
 
     <ol>
-      <li v-for='comment in comments' :key='comment.Id'>
+      <li v-for='comment in as.comments' :key='comment.Id'>
         <header>
           <q-item clickable class='comment-header' @click='goToProfile(comment)'>
             <q-avatar style='cursor: pointer' color='primary'>{{ getInitials(comment.AuthorName) }}
@@ -43,7 +43,7 @@
                 </q-item-section>
               </q-item>
 
-              <q-item clickable v-close-popup @click='onDeleteComment(comment)'>
+              <q-item clickable v-close-popup @click='removeComment(comment)'>
                 <q-item-section side>
                   <q-icon name='delete' />
                 </q-item-section>
@@ -68,35 +68,25 @@
 <script setup lang='ts'>
 
 import { ref } from 'vue';
-import { api, BadRequestError } from 'boot/axios';
+import { BadRequestError } from 'boot/axios';
 import { useUserStore } from 'stores/user-store';
 import utilities from './../utilities/utilities';
 import { useQuasar } from 'quasar';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
+import { useArtworkStore } from 'stores/artwork-store';
+import { ArtworkComment } from 'src/models/artwork-comment';
 
-interface Comment {
-  Id: string;
-  AuthorAlias: string;
-  AuthorName: string;
-  Comment: string;
-  Date: Date;
-}
-
-const props = defineProps<{ artworkId: string }>();
+//const props = defineProps<{ artworkId: string }>();
 const { user } = storeToRefs(useUserStore());
+const as = useArtworkStore();
 const q = useQuasar();
 const router = useRouter();
 
-const comments = ref<Comment[]>([]);
 let newComment = ref<string>('');
 
-const getComments = async () => {
-  const response = await api.get<Comment[]>(`/artworks/${props.artworkId}/comments`);
-  comments.value = response.data;
-};
-
-await getComments();
+// populate the store's comments on creation, which follows the artwork's store setup
+as.getComments();
 
 function getInitials(fullName: string): string {
   return fullName.split(' ').map(name => name.charAt(0)).join('');
@@ -106,50 +96,53 @@ function formatRelativeDate(commentDate: Date): string {
   return utilities.FormatRelativeDate(commentDate);
 }
 
-async function onNewComment(): Promise<void> {
-  if (user.value == null) throw new Error();
+// Determines whether the author of the comment matches the authenticated user.
+function canEdit(comment: ArtworkComment): boolean {
+  return comment.AuthorAlias === user.value?.Alias;
+}
+
+async function addComment(): Promise<void> {
   try {
-    const response = await api.post<{ Id: string; Date: Date }>(`/artworks/${props.artworkId}/comments`, { Comment: newComment.value });
-    comments.value = [...comments.value, {
-      Id: response.data.Id,
-      AuthorAlias: user.value.Alias,
-      AuthorName: user.value.Name,
-      Comment: newComment.value,
-      Date: response.data.Date
-    }];
+    await as.addComment(newComment.value);
   } catch (e) {
+    if (e instanceof BadRequestError) q.notify({
+      type: 'negative',
+      message: `An error occurred while adding the comment: </br>${e.Message}`,
+      html: true
+    });
+    else {
+      q.notify({
+        type: 'negative',
+        message: 'A server error occurred while adding the comment.'
+      });
+    }
     console.error(e);
   } finally {
     newComment.value = '';
   }
 }
 
-function canEdit(comment: Comment): boolean {
-  return comment.AuthorAlias === user.value?.Alias;
-}
-
-async function onDeleteComment(comment: Comment): Promise<void> {
+async function removeComment(comment: ArtworkComment): Promise<void> {
   try {
-    await api.delete(`/artworks/${props.artworkId}/comments/${comment.Id}`);
-    comments.value = [...comments.value.filter(c => c.Id !== comment.Id)];
-    q.notify({ type: 'positive', message: 'Comment deleted' });
+    await as.removeComment(comment);
+    q.notify({ type: 'positive', message: 'Comment deleted.' });
   } catch (e) {
     if (e instanceof BadRequestError) q.notify({
       type: 'negative',
-      message: `Couldn\'t delete the comment: </br>${e.Message}`,
+      message: `An error occurred while deleting the comment: </br>${e.Message}.`,
       html: true
     });
     else {
       q.notify({
         type: 'negative',
-        message: 'Couldn\'t delete the comment.'
+        message: 'A server error occurred while deleting the comment.'
       });
     }
     console.error(e);
   }
 }
 
-function goToProfile(comment: Comment): void {
+function goToProfile(comment: ArtworkComment): void {
   router.push(`/${comment.AuthorAlias}`);
 }
 

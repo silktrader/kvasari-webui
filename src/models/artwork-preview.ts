@@ -7,6 +7,5 @@ export interface ArtworkPreview {
   Comments: number;
   Reactions: number;
   AuthorName: string;
-
   AuthorAlias: string;
 }
