@@ -8,9 +8,7 @@
       </q-btn-group>
     </header>
     <div class='previews'>
-      <artwork-preview-component v-for='artwork in streamStore.artworks' :key='artwork.Id'
-                                 :artwork='artwork' :author='us.user'></artwork-preview-component>
-
+      <artwork-preview-component v-for='artwork in streamStore.artworks' :key='artwork.Id' :artwork='artwork' />
     </div>
 
   </q-page>

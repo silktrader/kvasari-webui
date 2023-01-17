@@ -69,35 +69,38 @@
     <section class='details-meta'>
 
       <div class='artist'>
-        <q-avatar size='120px'>
+        <q-avatar size='120px' @click='goToArtist'>
           <img src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'
                class='artist-avatar' alt='User Avatar'>
         </q-avatar>
 
-        <aside class='user-name-alias' v-if='isOwner'>
+        <aside class='user-name-alias' v-if='isOwner' @click='goToArtist'>
           <span><em>You</em></span>
         </aside>
 
-        <aside class='user-name-alias' v-else>
+        <aside class='user-name-alias' v-else @click='goToArtist'>
           <span>{{ artwork.Author.Name }}</span>
           <span class='artist-alias'>@{{ artwork.Author.Alias }}</span>
         </aside>
 
         <!-- Owner or viewer contextual controls -->
-        <q-toggle
-          v-if='isOwner'
-          v-model='isEditing'
-          size='xl'
-          color='accent'
-          icon='edit'
-        />
-        <q-btn outline color='primary' label='Follow' v-if='canFollow' />
+        <section class='controls'>
+          <q-toggle
+            v-if='isOwner'
+            v-model='isEditing'
+            size='xl'
+            color='accent'
+            icon='edit'
+          />
+          <q-btn color='negative' label='Delete' v-show='canDelete' @click='deleteArtwork' />
+          <q-btn outline color='primary' label='Follow' v-if='canFollow' />
+        </section>
 
       </div>
 
       <div class='meta'>
         <span class='meta-detail'><q-icon name='las la-image' size='md' />{{ formatType(artwork.Type) }}</span>
-        <span class='meta-detail' v-if='artwork.Location'><q-icon name='las la-landmark' size='md' />{{ artwork.Location
+        <span class='meta-detail'><q-icon name='las la-landmark' size='md' />{{ artwork.Location ?? 'Unknown Location'
           }}</span>
         <span class='meta-detail'><q-icon name='las la-copyright' size='md' /> Public Domain</span>
 
@@ -124,12 +127,14 @@ import utilities from 'src/utilities/utilities';
 import { useUserStore } from 'stores/user-store';
 import { useArtworkStore } from 'stores/artwork-store';
 import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router';
 
 
 const props = defineProps<{ artworkId: string }>();
 const q = useQuasar();
 const us = useUserStore();
 const as = useArtworkStore();
+const router = useRouter();
 
 const { artwork } = storeToRefs(as);
 
@@ -180,6 +185,8 @@ const isOwner = computed(() => artwork.value && artwork.value.Author.Alias === u
 
 // Determines whether the author can be followed by the user.
 const canFollow = computed(() => !isOwner.value && !artwork.value?.Author.FollowedByUser);
+
+const canDelete = computed(() => isOwner.value && isEditing.value);
 
 // a valid target to scroll to
 const imageTarget = getScrollTarget(document.getElementById('image') as HTMLElement);
@@ -233,6 +240,18 @@ async function updateTitle(newTitle: string): Promise<void> {
       message: 'Couldn\'t update the artwork\'s title'
     });
   }
+}
+
+async function deleteArtwork(): Promise<void> {
+  try {
+    console.log('er');
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function goToArtist(): void {
+  if (artwork.value) router.push(`/${artwork.value.Author.Alias}`);
 }
 
 </script>
@@ -380,6 +399,7 @@ async function updateTitle(newTitle: string): Promise<void> {
   display: flex;
   flex-direction: column;
   width: 120px; // matches the avatar's width
+  cursor: pointer;
 }
 
 .artist-avatar {
@@ -427,6 +447,10 @@ async function updateTitle(newTitle: string): Promise<void> {
     font-style: italic;
     padding-left: 2ch;
   }
+}
+
+.controls {
+  height: 150px;
 }
 
 </style>

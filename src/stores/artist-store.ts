@@ -1,15 +1,7 @@
 import { defineStore } from 'pinia';
 import { reactive, readonly, ref } from 'vue';
 import { api } from 'boot/axios';
-
-export interface UploadedArtwork {
-  Id: string;
-  Title?: string;
-  Format: string;
-  Added: string;
-  Comments: number;
-  Reactions: number;
-}
+import { ArtworkPreview } from 'src/models/artwork-preview';
 
 interface UserRelation {
   Alias: string;
@@ -39,7 +31,7 @@ export const useArtistStore = defineStore('artist', () => {
   const followed = ref<UserRelation[]>([]);
 
   // Stores the artworks uploaded by the targeted artist, and fetched by the requester, in reverse chronological order.
-  const artworks = ref<Map<string, UploadedArtwork>>(new Map());
+  const artworks = ref<Map<string, ArtworkPreview>>(new Map());
 
   // Tracks whence to get the next artworks from.
   const earliestArtworkDate = ref<string>(new Date().toISOString());
@@ -62,8 +54,8 @@ export const useArtistStore = defineStore('artist', () => {
   // Loading artworks should be performed in parallel to getting artist data, to minimise latency.
   async function loadArtworks(userAlias: string) {
     const response = await api.get<{
-      Requested: UploadedArtwork[];
-      New: UploadedArtwork[];
+      Requested: ArtworkPreview[];
+      New: ArtworkPreview[];
       Deleted: string[];
     }>('artworks', {
       params: {
@@ -75,7 +67,7 @@ export const useArtistStore = defineStore('artist', () => {
 
     // add artworks in reverse chronological order
     // not deleting the ID property inside the object, for pure convenience
-    const newArtworks = new Map<string, UploadedArtwork>();
+    const newArtworks = new Map<string, ArtworkPreview>();
     response.data.New.forEach(newArtwork =>
       newArtworks.set(newArtwork.Id, newArtwork)
     );
@@ -91,7 +83,7 @@ export const useArtistStore = defineStore('artist', () => {
     );
 
     // merge the new items with the current collection to update the latter
-    artworks.value = new Map<string, UploadedArtwork>([
+    artworks.value = new Map<string, ArtworkPreview>([
       ...newArtworks,
       ...artworks.value,
     ]);

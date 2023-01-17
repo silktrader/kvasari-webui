@@ -55,10 +55,10 @@
 
         <q-separator vertical inset class='q-mx-lg' />
 
-        <div class='user-menu-column'>
+        <div class='user-menu-column' @click='goToProfile'>
           <q-avatar size='120px'>
             <img src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'
-                 class='user-avatar' alt='User Avatar'>
+                 class='user-avatar-image' alt='User Avatar'>
           </q-avatar>
 
           <section class='user-name-alias'>
@@ -94,6 +94,10 @@ function signOut(): void {
   router.push('/authentication');
 }
 
+function goToProfile(): void {
+  if (us.user) router.push(`/${us.user.Alias}`);
+}
+
 </script>
 
 <style scoped>
@@ -110,6 +114,7 @@ function signOut(): void {
   align-items: center;
   flex: 1;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .user-name-alias {
@@ -127,7 +132,7 @@ function signOut(): void {
   font-style: italic;
 }
 
-.user-avatar {
+.user-avatar-image {
   object-fit: cover;
 }
 

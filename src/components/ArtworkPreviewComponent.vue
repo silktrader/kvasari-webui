@@ -5,19 +5,20 @@
     <aside class='overlay'>
 
       <section class='metadata'>
-        <div class='metadata-space'></div>
+        <div class='metadata-space' />
         <span class='title'>{{ artwork.Title }}</span>
-        <div class='metadata-space'></div>
+        <span v-if='!isUser' class='artist'>{{ artwork.AuthorName }}</span>
+        <div class='metadata-space' />
         <span class='added'>added {{ formatRelativeDate(artwork.Added) }}</span>
       </section>
 
       <section class='feedback'>
         <div>
-          <q-icon size='md' name='comment'></q-icon>
+          <q-icon size='sm' name='comment'></q-icon>
           <span>{{ artwork.Comments }}</span>
         </div>
         <div>
-          <q-icon size='md' name='reviews'></q-icon>
+          <q-icon size='sm' name='reviews'></q-icon>
           <span>{{ artwork.Reactions }}</span>
         </div>
       </section>
@@ -44,19 +45,20 @@
 
 <script setup lang='ts'>
 
-import { UploadedArtwork } from 'stores/artist-store';
 import { computed, onBeforeUnmount, onMounted, PropType, ref } from 'vue';
 import utilities from 'src/utilities/utilities';
 import { useRouter } from 'vue-router';
 import { useArtworkStore } from 'stores/artwork-store';
+import { useUserStore } from 'stores/user-store';
+import { ArtworkPreview } from 'src/models/artwork-preview';
 
 const props = defineProps({
-  artwork: Object as PropType<UploadedArtwork>,
-  author: Object as PropType<{ Name: string }>
+  artwork: Object as PropType<ArtworkPreview>
 });
 
 const router = useRouter();
 const as = useArtworkStore();
+const us = useUserStore();
 const imgUrl = ref<string>();
 
 onMounted(async () => {
@@ -67,8 +69,10 @@ onBeforeUnmount(() => {
   if (imgUrl.value) URL.revokeObjectURL(imgUrl.value);
 });
 
+const isUser = computed(() => us.user && us.user.Name == props.artwork?.AuthorName);
+
 const imgAlt = computed(() => {
-  return `${props.artwork?.Title || 'Untitled'}, by ${props.author?.Name}`;
+  return `${props.artwork?.Title || 'Untitled'}, by ${props.artwork?.AuthorName}`;
 });
 
 function navigateTo(artworkId: string): void {

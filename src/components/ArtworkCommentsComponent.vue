@@ -21,11 +21,14 @@
     <ol>
       <li v-for='comment in comments' :key='comment.Id'>
         <header>
-          <q-avatar color='primary' text-color='white'>{{ getInitials(comment.AuthorName) }}</q-avatar>
-          <div class='comment-author-date'>
-            <span class='comment-author'>{{ comment.AuthorName }}</span>
-            <span class='comment-date'>{{ formatRelativeDate(comment.Date) }}</span>
-          </div>
+          <q-item clickable class='comment-header' @click='goToProfile(comment)'>
+            <q-avatar style='cursor: pointer' color='primary'>{{ getInitials(comment.AuthorName) }}
+            </q-avatar>
+            <div class='comment-author-date'>
+              <span class='comment-author'>{{ comment.AuthorName }}</span>
+              <span class='comment-date'>{{ formatRelativeDate(comment.Date) }}</span>
+            </div>
+          </q-item>
 
           <div style='flex-grow: 5'></div>
           <q-btn-dropdown rounded flat dense no-icon-animation dropdown-icon='more_vert' v-if='canEdit(comment)'>
@@ -70,6 +73,7 @@ import { useUserStore } from 'stores/user-store';
 import utilities from './../utilities/utilities';
 import { useQuasar } from 'quasar';
 import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router';
 
 interface Comment {
   Id: string;
@@ -82,6 +86,7 @@ interface Comment {
 const props = defineProps<{ artworkId: string }>();
 const { user } = storeToRefs(useUserStore());
 const q = useQuasar();
+const router = useRouter();
 
 const comments = ref<Comment[]>([]);
 let newComment = ref<string>('');
@@ -144,6 +149,10 @@ async function onDeleteComment(comment: Comment): Promise<void> {
   }
 }
 
+function goToProfile(comment: Comment): void {
+  router.push(`/${comment.AuthorAlias}`);
+}
+
 </script>
 
 <style scoped lang='scss'>
@@ -174,14 +183,20 @@ li {
   background-color: rgb(11, 11, 11);
   border-radius: 5px;
 
-  header {
-    display: flex;
-    gap: 10px;
-  }
-
   article {
     font-size: medium;
   }
+}
+
+header {
+  display: flex;
+}
+
+.comment-header {
+  padding-left: 0;
+  padding-right: 16px;
+  display: flex;
+  gap: 10px;
 }
 
 .comment-author-date {
@@ -192,6 +207,7 @@ li {
 .comment-author {
   font-size: small;
   font-weight: 600;
+  cursor: pointer;
 }
 
 .comment-date {
