@@ -1,22 +1,11 @@
 import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
-import { ref } from 'vue';
+import { readonly, ref } from 'vue';
 import { useQuasar } from 'quasar';
-
-interface Artwork {
-  Id: string;
-  Title?: string;
-  Description: string;
-  PictureURL?: string;
-  Added: Date;
-  AuthorAlias: string;
-  AuthorName: string;
-  Comments: number;
-  Reactions: number;
-}
+import { ArtworkPreview } from 'src/models/artwork-preview';
 
 export const useStreamStore = defineStore('stream', () => {
-  const artworks = ref<Artwork[]>([]);
+  const artworks = ref<ArtworkPreview[]>([]);
   const q = useQuasar();
 
   async function clearStream() {
@@ -30,15 +19,15 @@ export const useStreamStore = defineStore('stream', () => {
   ) {
     try {
       const response = await api.get<{
-        Artworks: Artwork[];
-        NewArtworks: Artwork[];
+        Artworks: ArtworkPreview[];
+        NewArtworks: ArtworkPreview[];
         DeletedIds: string[];
       }>(`/users/${userAlias}/stream`, { params: { since, latest } });
       artworks.value.push(...response.data.Artworks);
     } catch (e) {
-      q.notify({ type: 'negative', message: "Couldn't update the stream" });
+      q.notify({ type: 'negative', message: 'Couldn\'t update the stream' });
     }
   }
 
-  return { artworks, updateStream, clearStream };
+  return { artworks: readonly(artworks), updateStream, clearStream };
 });

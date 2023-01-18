@@ -463,18 +463,18 @@ $border-radius: 3px;
 .uploads-previews {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 8px;
   padding-left: $padding;
   padding-right: $padding;
   padding-top: $padding;
 }
 
 .uploader {
-  height: 30vh;
+  height: 25vh;
 }
 
 .q-uploader {
-  height: 30vh;
+  height: 25vh;
 }
 
 .spacer {

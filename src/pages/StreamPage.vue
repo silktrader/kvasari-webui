@@ -2,20 +2,21 @@
   <q-page class='stream-container'>
     <header class='stream-header'>
       <q-btn-group outline>
-        <q-btn outline color='accent' label='Latest' icon='schedule' />
-        <q-btn outline color='accent' label='Random' icon='shuffle' disable />
-        <q-btn outline color='accent' label='Most Commented' icon='comment' disable />
+        <q-btn color='accent' icon='schedule' label='Latest' outline />
+        <q-btn color='accent' disable icon='shuffle' label='Random' outline />
+        <q-btn color='accent' disable icon='comment' label='Most Commented' outline />
       </q-btn-group>
     </header>
     <div class='previews'>
-      <artwork-preview-component v-for='artwork in streamStore.artworks' :key='artwork.Id' :artwork='artwork' />
+      <artwork-preview-component v-for='artwork in ss.artworks' :key='artwork.Id' :artwork='artwork' />
+      <div class='spacer' />
     </div>
 
   </q-page>
 
 </template>
 
-<script setup lang='ts'>
+<script lang='ts' setup>
 import { onMounted } from 'vue';
 import { useStreamStore } from 'stores/stream-store';
 import { date } from 'quasar';
@@ -24,13 +25,13 @@ import { useUserStore } from 'stores/user-store';
 import ArtworkPreviewComponent from 'components/ArtworkPreviewComponent.vue';
 
 const router = useRouter();
-const streamStore = useStreamStore();
+const ss = useStreamStore();
 const us = useUserStore();
 
 onMounted(() => {
   const now = new Date().toISOString();
-  streamStore.clearStream();
-  if (us.user) streamStore.updateStream(us.user.Alias, now, now);
+  ss.clearStream();
+  if (us.user) ss.updateStream(us.user.Alias, now, now);
 });
 
 function timeAgo(datetime: Date): number {
@@ -44,7 +45,7 @@ function navigateTo(artworkId: string): void {
 
 </script>
 
-<style scoped lang='scss'>
+<style lang='scss' scoped>
 
 @import '../css/quasar.variables.scss';
 
@@ -66,30 +67,14 @@ $border-radius: 3px;
 .previews {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 8px;
   padding-left: $padding;
   padding-right: $padding;
   padding-top: $toolbar-padding;
 }
 
-li {
-  height: 350px;
-  cursor: pointer;
-  position: relative;
-  flex: 1 1 auto;
-}
-
-li img {
-  object-fit: cover;
-  width: 100%;
-  height: 100%;
-  vertical-align: middle;
-  border-radius: $border-radius;
-}
-
-ul::after {
-  content: "";
-  flex-grow: 100;
+.spacer {
+  flex-grow: 10;
 }
 
 .overlay {

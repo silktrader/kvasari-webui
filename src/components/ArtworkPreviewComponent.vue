@@ -1,7 +1,7 @@
 <template>
 
   <section class='preview' @click='navigateTo(artwork.Id)'>
-    <img :src='imgUrl' :alt='imgAlt' />
+    <img :alt='imgAlt' :src='imgUrl' />
     <aside class='overlay'>
 
       <section class='metadata'>
@@ -14,11 +14,11 @@
 
       <section class='feedback'>
         <div>
-          <q-icon size='sm' name='comment'></q-icon>
+          <q-icon name='comment' size='sm'></q-icon>
           <span>{{ artwork.Comments }}</span>
         </div>
         <div>
-          <q-icon size='sm' name='reviews'></q-icon>
+          <q-icon name='reviews' size='sm'></q-icon>
           <span>{{ artwork.Reactions }}</span>
         </div>
       </section>
@@ -43,7 +43,7 @@
 
 </template>
 
-<script setup lang='ts'>
+<script lang='ts' setup>
 
 import { computed, onBeforeUnmount, onMounted, PropType, ref } from 'vue';
 import utilities from 'src/utilities/utilities';
@@ -89,21 +89,21 @@ function onEdit() {
 
 </script>
 
-<style scoped lang='scss'>
+<style lang='scss' scoped>
 
 $border-radius: 3px;
 
 .preview {
-  height: 30vh;
   cursor: pointer;
   position: relative;
-  //flex: 1 1 auto;
+  height: 25vh;
+  flex: 1 1 auto;
 }
 
 img {
   object-fit: cover;
-  //width: 100%;
-  height: 30vh;
+  width: 100%;
+  height: 100%;
   vertical-align: middle;
   border-radius: $border-radius;
 }
