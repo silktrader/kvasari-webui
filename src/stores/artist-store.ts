@@ -102,6 +102,7 @@ export const useArtistStore = defineStore('artist', () => {
 
     // update the state
     artworks.value.delete(artwork.Id);
+    artist.Artworks -= 1;
     artist.Comments -= artwork.Comments;
     artist.Reactions -= artwork.Reactions;
   }

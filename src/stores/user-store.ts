@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 export interface User {
   readonly Id: string;
@@ -25,6 +25,9 @@ export const useUserStore = defineStore('user', () => {
     localStorage.clear();
     if (newUser) localStorage.setItem(userKey, JSON.stringify(newUser));
   });
+
+  // Determines whether the viewing user is authenticated.
+  const isAuthenticated = computed(() => !!user.value?.Id);
 
   async function Register(regData: { Alias: string; Password: string; Email: string; Name: string }) {
     try {
@@ -95,6 +98,7 @@ export const useUserStore = defineStore('user', () => {
     Register,
     SignIn,
     SignOut,
+    isAuthenticated,
     updateName,
     followArtist,
     unfollowArtist,

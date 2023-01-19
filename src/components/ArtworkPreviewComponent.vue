@@ -6,8 +6,8 @@
 
       <section class='metadata'>
         <div class='metadata-space' />
-        <span class='title'>{{ artwork.Title }}</span>
-        <span v-if='!isUser' class='artist'>{{ artwork.AuthorName }}</span>
+        <span class='title'>{{ artwork.Title ?? 'Untitled' }}</span>
+        <span v-if='!!artwork.Author' class='artist'>{{ artwork.Author.Name }}</span>
         <div class='metadata-space' />
         <span class='added'>added {{ formatRelativeDate(artwork.Added) }}</span>
       </section>
@@ -83,8 +83,6 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   if (imgUrl.value) URL.revokeObjectURL(imgUrl.value);
 });
-
-const isUser = computed(() => us.user && us.user.Alias == props.artwork?.Author?.Alias);
 
 const imgAlt = computed(() => `${props.artwork.Title ?? 'Untitled'}, by ${props.artwork.Author?.Name ?? us.user.Alias}`);
 
