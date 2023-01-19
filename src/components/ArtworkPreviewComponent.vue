@@ -12,31 +12,39 @@
         <span class='added'>added {{ formatRelativeDate(artwork.Added) }}</span>
       </section>
 
-      <section class='feedback'>
-        <div>
-          <q-icon name='comment' size='sm'></q-icon>
-          <span>{{ artwork.Comments }}</span>
-        </div>
-        <div>
-          <q-icon name='reviews' size='sm'></q-icon>
-          <span>{{ artwork.Reactions }}</span>
-        </div>
-      </section>
+      <section class='overlay-right'>
 
-      <!--      <section class='controls'>-->
-      <!--        <q-btn round color='primary' icon='more_vert' @click.stop>-->
-      <!--          <q-menu>-->
-      <!--            <q-list style='min-width: 100px'>-->
-      <!--              <q-item clickable v-close-popup @click='onEdit'>-->
-      <!--                <q-item-section>Edit</q-item-section>-->
-      <!--              </q-item>-->
-      <!--              <q-item clickable v-close-popup>-->
-      <!--                <q-item-section>Delete</q-item-section>-->
-      <!--              </q-item>-->
-      <!--            </q-list>-->
-      <!--          </q-menu>-->
-      <!--        </q-btn>-->
-      <!--      </section>-->
+        <section class='controls'>
+          <q-btn icon='more_vert' outline round @click.stop>
+            <q-menu>
+              <q-list style='min-width: 100px'>
+                <q-item v-close-popup clickable disable @click='editTitle'>
+                  <q-item-section>Edit Title</q-item-section>
+                </q-item>
+                <q-item v-close-popup clickable @click='removeArtwork'>
+                  <q-item-section>Delete</q-item-section>
+                </q-item>
+                <q-separator />
+                <q-item v-close-popup clickable>
+                  <q-item-section>Dismiss</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
+        </section>
+
+        <section class='feedback'>
+          <div>
+            <q-icon name='comment' size='sm'></q-icon>
+            <span>{{ artwork.Comments }}</span>
+          </div>
+          <div>
+            <q-icon name='reviews' size='sm'></q-icon>
+            <span>{{ artwork.Reactions }}</span>
+          </div>
+        </section>
+
+      </section>
 
     </aside>
   </section>
@@ -51,29 +59,34 @@ import { useRouter } from 'vue-router';
 import { useArtworkStore } from 'stores/artwork-store';
 import { useUserStore } from 'stores/user-store';
 import { ArtworkPreview } from 'src/models/artwork-preview';
+import { useArtistStore } from 'stores/artist-store';
+import { useQuasar } from 'quasar';
 
 const props = defineProps({
-  artwork: Object as PropType<ArtworkPreview>
+  artwork: {
+    type: Object as PropType<ArtworkPreview>,
+    required: true
+  }
 });
 
 const router = useRouter();
 const as = useArtworkStore();
+const ars = useArtistStore();
 const us = useUserStore();
+const q = useQuasar();
 const imgUrl = ref<string>();
 
 onMounted(async () => {
-  if (props.artwork) imgUrl.value = URL.createObjectURL(await as.getImageBlob(props.artwork.Id));
+  imgUrl.value = URL.createObjectURL(await as.getImageBlob(props.artwork.Id));
 });
 
 onBeforeUnmount(() => {
   if (imgUrl.value) URL.revokeObjectURL(imgUrl.value);
 });
 
-const isUser = computed(() => us.user && us.user.Name == props.artwork?.AuthorName);
+const isUser = computed(() => us.user && us.user.Alias == props.artwork?.Author?.Alias);
 
-const imgAlt = computed(() => {
-  return `${props.artwork?.Title || 'Untitled'}, by ${props.artwork?.AuthorName}`;
-});
+const imgAlt = computed(() => `${props.artwork.Title ?? 'Untitled'}, by ${props.artwork.Author?.Name ?? us.user.Alias}`);
 
 function navigateTo(artworkId: string): void {
   router.push(`/artworks/${artworkId}`);
@@ -83,8 +96,27 @@ function formatRelativeDate(date: Date): string {
   return utilities.FormatRelativeDate(date);
 }
 
-function onEdit() {
+function editTitle() {
   console.log('Unimplemented');
+}
+
+function removeArtwork() {
+  const identifier = props.artwork.Title ?? `artwork #${props.artwork.Id}`;
+  try {
+    ars.removeArtwork(props.artwork);
+    q.notify({
+      type: 'positive',
+      message: `You deleted <b>${identifier}</b>.`,
+      html: true
+    });
+  } catch (e) {
+    q.notify({
+      type: 'negative',
+      message: `An error occurred while deleting <b>${identifier}</b>.`,
+      html: true
+    });
+    console.error(e);
+  }
 }
 
 </script>
@@ -127,6 +159,14 @@ img {
   transition: opacity 0.5s ease-in-out;
   -moz-transition: opacity 0.5s ease-in-out;
   -webkit-transition: opacity 0.5s ease-in-out;
+}
+
+.overlay-right {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+  align-items: end;
 }
 
 .overlay:hover {

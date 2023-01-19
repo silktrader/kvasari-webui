@@ -44,7 +44,7 @@ export const useUserStore = defineStore('user', () => {
       localStorage.clear();
       const response = await api.post<User & { Status?: string }>('/sessions', {
         alias: alias,
-        password: password,
+        password: password
       });
 
       // remove unnecessary data, debatable mutation
@@ -64,36 +64,29 @@ export const useUserStore = defineStore('user', () => {
 
   async function updateName(name: string): Promise<void> {
     await api.put(`/users/${user.value.Alias}/name`, {
-      name,
+      name
     });
 
     // updating the Name will trigger a local storage update by way of a watcher
     user.value = { ...user.value, Name: name };
   }
 
-  const noAuthUserError = 'No Authenticated user';
 
   async function followArtist(target: string): Promise<void> {
-    await api.post<{
-      Alias: string;
-      Followed: Date;
-    }>(`/users/${user.value.Alias}/followed`, {
-      TargetAlias: target,
+    await api.post<{ Alias: string; Followed: Date; }>(`/users/${user.value.Alias}/followed`, {
+      TargetAlias: target
     });
   }
 
   async function unfollowArtist(target: string): Promise<void> {
-    if (!user.value) throw new Error(noAuthUserError);
     await api.delete(`/users/${user.value.Alias}/followed/${target}`);
   }
 
   async function blockUser(data: { TargetAlias: string }): Promise<void> {
-    if (!user.value) throw new Error(noAuthUserError);
     await api.post(`/users/${user.value.Alias}/bans`, data);
   }
 
   async function unblockUser(target: string): Promise<void> {
-    if (!user.value) throw new Error(noAuthUserError);
     await api.delete(`/users/${user.value.Alias}/bans/${target}`);
   }
 
@@ -106,6 +99,6 @@ export const useUserStore = defineStore('user', () => {
     followArtist,
     unfollowArtist,
     blockUser,
-    unblockUser,
+    unblockUser
   };
 });

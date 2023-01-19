@@ -2,7 +2,6 @@ import { defineStore } from 'pinia';
 import { reactive, readonly, ref } from 'vue';
 import { api } from 'boot/axios';
 import { ArtworkPreview } from 'src/models/artwork-preview';
-import { useUserStore } from 'stores/user-store';
 
 interface UserRelation {
   Alias: string;
@@ -36,7 +35,7 @@ export const useArtistStore = defineStore('artist', () => {
   // Tracks whence to get the next artworks from.
   const earliestArtworkDate = ref<string>(new Date().toISOString());
 
-  async function setArtist(alias: string) {
+  async function loadArtistData(alias: string) {
     const response = await api.get<Artist>(`/users/${alias}`);
 
     // can't assign new object, must use current reference
@@ -84,20 +83,27 @@ export const useArtistStore = defineStore('artist', () => {
   }
 
   function addArtwork(id: string, format: string, updated: string): void {
-    const { user: { Alias, Name } } = useUserStore(); // not reactive
     const newArtworks = new Map<string, ArtworkPreview>([[id, {
       Added: updated,
       Updated: updated,
       Format: format,
       Id: id,
-      AuthorName: Name,
-      AuthorAlias: Alias,
       Comments: 0,
       Reactions: 0
     }]]);
 
     // add the recently uploaded artwork to a copy of the currently displayed artworks, without sorting
     artworks.value = new Map<string, ArtworkPreview>([...newArtworks, ...artworks.value]);
+  }
+
+  // Carries out artwork delete requests, given IDs, while properly updating the state.
+  async function removeArtwork(artwork: ArtworkPreview): Promise<void> {
+    await api.delete(`/artworks/${artwork.Id}`);
+
+    // update the state
+    artworks.value.delete(artwork.Id);
+    artist.Comments -= artwork.Comments;
+    artist.Reactions -= artwork.Reactions;
   }
 
   function updateName(newName: string) {
@@ -133,11 +139,12 @@ export const useArtistStore = defineStore('artist', () => {
     artworks: readonly(artworks),
     followers,
     followed,
-    setArtist,
+    loadArtistData,
     updateName,
     resetArtworks,
     loadArtworks,
     addArtwork,
+    removeArtwork,
     addUserAsFollower,
     removeUserAsFollower,
     blockUser,

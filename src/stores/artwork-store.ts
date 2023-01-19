@@ -45,7 +45,7 @@ export const useArtworkStore = defineStore('artwork', () => {
   async function getImageBlob(artworkId: string): Promise<Blob | MediaSource> {
     return (
       await api.get(`http://localhost:3000/artworks/${artworkId}/image`, {
-        responseType: 'blob',
+        responseType: 'blob'
       })
     ).data;
   }
@@ -59,7 +59,7 @@ export const useArtworkStore = defineStore('artwork', () => {
   }
 
   async function removeArtwork() {
-    await api.delete(`/artworks/:artworkId/${artwork.value?.Id}`);
+    await api.delete(`/artworks/${artwork.value?.Id}`);
     artwork.value = undefined;
     comments.value = [];
   }
@@ -71,14 +71,14 @@ export const useArtworkStore = defineStore('artwork', () => {
   async function addComment(contents: string): Promise<void> {
     const { user } = useUserStore(); // this isn't reactive
     const response = await api.post<{ Id: string; Date: Date }>(`/artworks/${artwork.value?.Id}/comments`, {
-      Comment: contents,
+      Comment: contents
     });
     comments.value.push({
       Id: response.data.Id,
       AuthorAlias: user.Alias,
       AuthorName: user.Name,
       Comment: contents,
-      Date: response.data.Date,
+      Date: response.data.Date
     });
   }
 
@@ -96,6 +96,6 @@ export const useArtworkStore = defineStore('artwork', () => {
     comments,
     getComments,
     addComment,
-    removeComment,
+    removeComment
   };
 });

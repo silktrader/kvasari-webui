@@ -129,10 +129,7 @@
           />
         </div>
 
-        <artwork-preview-component v-for='[id, artwork] in artworks'
-                                   :key='id'
-                                   :artwork='artwork'
-                                   :author='artist' />
+        <artwork-preview-component v-for='[id, artwork] in artworks' :key='id' :artwork='artwork' />
 
         <div class='spacer' />
 
@@ -174,7 +171,7 @@ watch(
   toParams => {
     try {
       const alias = toParams.alias as string ?? us.user?.Alias;
-      as.setArtist(alias);
+      as.loadArtistData(alias);
       as.resetArtworks();
       as.loadArtworks(alias);
     } catch (error) {
@@ -240,8 +237,7 @@ function onUploaded(response: UploadResponse): void {
   const imageData: { Id: string, Format: string, Updated: string } = JSON.parse(response.xhr.response);
   q.notify({
     type: 'positive',
-    message: `Uploaded <b>${response.files.length}</b> files,
-      for a total of ${formatSize(response.files.map(f => f.size).reduce((p, n) => p + n))}`,
+    message: `Uploaded a new artwork (${formatSize(response.files.map(f => f.size).reduce((p, n) => p + n))}).`,
     html: true
   });
 

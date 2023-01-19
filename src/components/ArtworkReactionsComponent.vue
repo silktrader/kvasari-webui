@@ -3,9 +3,9 @@
   <section class='reactions-container'>
 
     <q-btn-dropdown
-      split
-      color='primary'
       class='reaction-button'
+      color='primary'
+      split
     >
       <template v-slot:label>
         <div class='reaction-label'>
@@ -18,27 +18,27 @@
 
       <q-list>
 
-        <q-item clickable v-close-popup @click='removeReaction'>
+        <q-item v-close-popup clickable @click='removeReaction'>
           <q-item-section avatar>
-            <img class='reaction-icon' :src='`${baseUrl}/static/no_face.png`' alt='No Reaction' />
+            <img :src='`${baseUrl}/static/no_face.png`' alt='No Reaction' class='reaction-icon' />
           </q-item-section>
           <q-item-section>
             <q-item-label>None</q-item-label>
           </q-item-section>
         </q-item>
 
-        <q-item clickable v-close-popup @click='addReaction(ReactionType.Like)'>
+        <q-item v-close-popup clickable @click='addReaction(ReactionType.Like)'>
           <q-item-section avatar>
-            <img class='reaction-icon' :src='`${baseUrl}/static/thumb_up.png`' alt='Like' />
+            <img :src='`${baseUrl}/static/thumb_up.png`' alt='Like' class='reaction-icon' />
           </q-item-section>
           <q-item-section>
             <q-item-label>Like</q-item-label>
           </q-item-section>
         </q-item>
 
-        <q-item clickable v-close-popup @click='addReaction(ReactionType.Perplexed)'>
+        <q-item v-close-popup clickable @click='addReaction(ReactionType.Perplexed)'>
           <q-item-section avatar>
-            <img class='reaction-icon' :src='`${baseUrl}/static/monocle.png`' alt='Perplexed' />
+            <img :src='`${baseUrl}/static/monocle.png`' alt='Perplexed' class='reaction-icon' />
           </q-item-section>
           <q-item-section>
             <q-item-label>Perplexed</q-item-label>
@@ -50,9 +50,9 @@
 
     <section class='reactions-breakdown'>
 
-      <div class='reaction-type' v-for='[reactionType, reactions] in categorisedReactions' :key='reactionType'>
-        <img class='reaction-icon' :src='`${baseUrl}/static/${reactionIcons.get(reactionType)}.png`' />
-        <q-badge color='secondary' class='reaction-badge'>{{ reactions.length }}</q-badge>
+      <div v-for='[reactionType, reactions] in categorisedReactions' :key='reactionType' class='reaction-type'>
+        <img :src='`${baseUrl}/static/${reactionIcons.get(reactionType)}.png`' class='reaction-icon' />
+        <q-badge class='reaction-badge' color='secondary'>{{ reactions.length }}</q-badge>
       </div>
 
     </section>
@@ -61,11 +61,11 @@
 
 </template>
 
-<script setup lang='ts'>
+<script lang='ts' setup>
 
 import { computed, ref } from 'vue';
 import { api, baseUrl } from 'boot/axios';
-import { useUserStore, User } from 'stores/user-store';
+import { User, useUserStore } from 'stores/user-store';
 import { useQuasar } from 'quasar';
 
 enum ReactionType {
@@ -102,8 +102,6 @@ const getReactions = async () => {
     selectedReaction.value = userReaction.Reaction;
   }
 };
-
-console.log(process.env.baseUrl);
 
 await getReactions();
 
@@ -161,7 +159,7 @@ const categorisedReactions = computed(() => {
 
 </script>
 
-<style scoped lang='scss'>
+<style lang='scss' scoped>
 
 @import url('https://cdn.jsdelivr.net/gh/SebastianAigner/twemoji-amazing@1.1.0/twemoji-amazing.css');
 
