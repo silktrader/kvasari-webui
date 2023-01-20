@@ -6,9 +6,9 @@
 
       <template #default>
         <main v-if='hasArtwork' class='artwork-container'>
-          <ArtworkDetailsComponent :artwork-id='artworkId'></ArtworkDetailsComponent>
-          <ArtworkReactionsComponent :artwork-id='artworkId'></ArtworkReactionsComponent>
-          <ArtworkCommentsComponent :artwork-id='artworkId'></ArtworkCommentsComponent>
+          <ArtworkDetailsComponent></ArtworkDetailsComponent>
+          <ArtworkReactionsComponent></ArtworkReactionsComponent>
+          <ArtworkCommentsComponent></ArtworkCommentsComponent>
         </main>
 
       </template>
@@ -45,7 +45,8 @@ watch(() => route.params.artworkId, async newId => {
   if (newId) {
     artworkId.value = newId as string;
     await setArtwork(artworkId.value);
-    await loadComments(artworkId.value);
+    await getComments(artworkId.value);
+    await getReactions(artworkId.value);
   } else {
     artworkId.value = undefined;
     as.clear();
@@ -69,7 +70,7 @@ async function setArtwork(artworkId: string): Promise<void> {
 }
 
 // Populate the store's comments.
-async function loadComments(artworkId: string): Promise<void> {
+async function getComments(artworkId: string): Promise<void> {
   try {
     await as.getComments(artworkId);
   } catch (error) {
@@ -77,6 +78,18 @@ async function loadComments(artworkId: string): Promise<void> {
       q.notify({ type: 'negative', message: 'Artwork not found.' });
     } else {
       q.notify({ type: 'negative', message: 'Server error while loading the artwork\'s comments.' });
+    }
+  }
+}
+
+async function getReactions(artworkId: string): Promise<void> {
+  try {
+    await as.getReactions(artworkId);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      q.notify({ type: 'negative', message: 'Artwork not found.' });
+    } else {
+      q.notify({ type: 'negative', message: 'Server error while loading the artwork\'s reactions.' });
     }
   }
 }

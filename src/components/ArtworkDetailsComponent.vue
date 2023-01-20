@@ -129,7 +129,6 @@ import { useArtworkStore } from 'stores/artwork-store';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 
-const props = defineProps<{ artworkId: string }>();
 const q = useQuasar();
 const us = useUserStore();
 const as = useArtworkStore();
@@ -177,7 +176,7 @@ const canDelete = computed(() => isOwner.value && isEditing.value);
 const imageTarget = getScrollTarget(document.getElementById('image') as HTMLElement);
 
 onMounted(async () => {
-  imgUrl.value = URL.createObjectURL(await as.getImageBlob(props.artworkId));
+  imgUrl.value = URL.createObjectURL(await as.getImageBlob(as.artwork.Id));
 });
 
 onBeforeUnmount(() => {

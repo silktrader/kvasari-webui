@@ -9,9 +9,9 @@
     >
       <template v-slot:label>
         <div class='reaction-label'>
-          <q-icon v-if='!selectedReaction' left name='add_reaction' size='xl' />
+          <q-icon v-if='!userReaction' left name='add_reaction' size='xl' />
           <q-avatar v-else class='reaction-label-button'>
-            <img :src='`${baseUrl}/static/${reactionIcons.get(selectedReaction)}.png`' />
+            <img :alt='userReaction' :src='`${baseUrl}/static/${reactionIcons.get(userReaction)}.png`' />
           </q-avatar>
         </div>
       </template>
@@ -51,7 +51,8 @@
     <section class='reactions-breakdown'>
 
       <div v-for='[reactionType, reactions] in categorisedReactions' :key='reactionType' class='reaction-type'>
-        <img :src='`${baseUrl}/static/${reactionIcons.get(reactionType)}.png`' class='reaction-icon' />
+        <img :alt='reactionType' :src='`${baseUrl}/static/${reactionIcons.get(reactionType)}.png`'
+             class='reaction-icon' />
         <q-badge class='reaction-badge' color='secondary'>{{ reactions.length }}</q-badge>
       </div>
 
@@ -62,91 +63,28 @@
 </template>
 
 <script lang='ts' setup>
-
-import { computed, ref } from 'vue';
-import { api, baseUrl } from 'boot/axios';
-import { User, useUserStore } from 'stores/user-store';
+import { computed } from 'vue';
+import { baseUrl } from 'boot/axios';
+import { useUserStore } from 'stores/user-store';
 import { useQuasar } from 'quasar';
-
-enum ReactionType {
-  Like = 'Like',
-  Perplexed = 'Perplexed'
-}
-
-interface Reaction {
-  AuthorAlias: string;
-  AuthorName: string;
-  Reaction: ReactionType;
-  Date: Date;
-}
+import { Reaction, ReactionType } from 'src/models/reaction';
+import { useArtworkStore } from 'stores/artwork-store';
 
 const reactionIcons = new Map([
   [ReactionType.Like, 'thumb_up'],
   [ReactionType.Perplexed, 'monocle']
 ]);
 
-const props = defineProps<{ artworkId: string }>();
 const q = useQuasar();
-const user = <User>useUserStore().user;
+const as = useArtworkStore();
+const us = useUserStore();
 
-const selectedReaction = ref<ReactionType>();
-const reactions = ref<ReadonlyArray<Reaction>>([]);
-
-const getReactions = async () => {
-  const response = await api.get<Reaction[]>(`/artworks/${props.artworkId}/reactions`);
-  reactions.value = response.data;
-
-  // find the user's reaction and display it
-  const userReaction = reactions.value.find(reaction => reaction.AuthorAlias == user.Alias);
-  if (userReaction) {
-    selectedReaction.value = userReaction.Reaction;
-  }
-};
-
-await getReactions();
-
-// update the user reaction with a new one
-async function addReaction(type: ReactionType): Promise<void> {
-
-  try {
-    const response = await api.put<{ Status: string, Date: Date }>(`/artworks/${props.artworkId}/reactions/${user.Alias}`, {
-      Reaction: type
-    });
-
-    // ensure proper removal of existing user reaction
-    reactions.value = [...reactions.value.filter(r => r.AuthorAlias !== user.Alias), {
-      AuthorAlias: user.Alias,
-      AuthorName: user.Name,
-      Reaction: type,
-      Date: response.data.Date
-    }];
-
-    selectedReaction.value = type;
-
-    q.notify({ type: 'positive', message: 'Reaction updated' });
-
-  } catch (e) {
-    q.notify({ type: 'negative', message: 'Couldn\'t record your reaction' });
-    console.log(e);
-  }
-}
-
-async function removeReaction(): Promise<void> {
-  try {
-    await api.delete(`/artworks/${props.artworkId}/reactions/${user.Alias}`);
-    reactions.value = [...reactions.value.filter(r => r.AuthorAlias !== user.Alias)];
-    q.notify({ type: 'positive', message: 'Reaction removed' });
-    selectedReaction.value = undefined;
-  } catch (e) {
-    q.notify({ type: 'negative', message: 'Couldn\'t record your reaction' });
-    console.error(e);
-  }
-}
+const userReaction = computed(() => as.reactions.find(r => r.AuthorAlias === us.user.Alias)?.Reaction);
 
 // automatically sort reactions in maps for easier display
 const categorisedReactions = computed(() => {
   const reactionsMap = new Map<ReactionType, Array<Reaction>>();
-  reactions.value.forEach(r => {
+  as.reactions.forEach(r => {
     const existingReactions = reactionsMap.get(r.Reaction);
     if (existingReactions) {
       existingReactions.push(r);
@@ -156,6 +94,30 @@ const categorisedReactions = computed(() => {
   });
   return reactionsMap;
 });
+
+// Updates the authenticated user reaction with a new one.
+async function addReaction(type: ReactionType): Promise<void> {
+  try {
+    await as.addReaction(type);
+    // selectedReaction.value = type;
+    q.notify({ type: 'positive', message: 'Reaction updated.' });
+  } catch (e) {
+    q.notify({ type: 'negative', message: 'Error while recording your reaction.' });
+    console.error(e);
+  }
+}
+
+// Removes the authenticated user's reaction.
+async function removeReaction(): Promise<void> {
+  try {
+    await as.removeReaction();
+    q.notify({ type: 'positive', message: 'Reaction removed.' });
+    // selectedReaction.value = undefined;
+  } catch (e) {
+    q.notify({ type: 'negative', message: 'Error while deleting your reaction.' });
+    console.error(e);
+  }
+}
 
 </script>
 
