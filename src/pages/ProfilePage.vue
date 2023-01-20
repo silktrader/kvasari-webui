@@ -233,7 +233,6 @@ function truncateFileName(fileName: string): string {
 type UploadResponse = { files: ReadonlyArray<{ name: string, size: number }>, xhr: { response: string } };
 
 function onUploaded(response: UploadResponse): void {
-  console.log(response);
   const imageData: { Id: string, Format: string, Updated: string } = JSON.parse(response.xhr.response);
   q.notify({
     type: 'positive',
@@ -243,7 +242,6 @@ function onUploaded(response: UploadResponse): void {
 
   // update the store
   as.addArtwork(imageData.Id, imageData.Format, imageData.Updated);
-
 }
 
 function onRejected(files: ReadonlyArray<{ file: { name: string, size: number } }>): void {
@@ -281,7 +279,7 @@ function onFailed(info: { xhr: { response: string } }): void {
   const responseText = JSON.parse(info.xhr.response);
   q.notify({
     type: 'negative',
-    message: `A problem arose while uploading the image. <br/>${responseText?.Message ?? responseText?.Error}`,
+    message: `A problem arose while uploading the image: <br/>${responseText?.Message ?? responseText?.Error}`,
     html: true
   });
 }

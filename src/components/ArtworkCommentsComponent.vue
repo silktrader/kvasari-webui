@@ -7,13 +7,13 @@
     <q-form @submit='addComment'>
       <div class='form-contents'>
         <div class='form-text'>
-          <q-input standout autogrow clearable v-model='newComment' type='textarea'
-                   label='New Comment'
+          <q-input v-model='newComment' autogrow class='comment-input' clearable label='New Comment'
                    placeholder='Leave a constructive, possibly articulate, comment.'
-                   class='comment-input' />
+                   standout
+                   type='textarea' />
         </div>
         <div class='form-submit'>
-          <q-btn round flat type='submit' color='primary' icon='send' />
+          <q-btn color='primary' flat icon='send' round type='submit' />
         </div>
       </div>
     </q-form>
@@ -21,8 +21,8 @@
     <ol>
       <li v-for='comment in as.comments' :key='comment.Id'>
         <header>
-          <q-item clickable class='comment-header' @click='goToProfile(comment)'>
-            <q-avatar style='cursor: pointer' color='primary'>{{ getInitials(comment.AuthorName) }}
+          <q-item class='comment-header' clickable @click='goToProfile(comment)'>
+            <q-avatar color='primary' style='cursor: pointer'>{{ getInitials(comment.AuthorName) }}
             </q-avatar>
             <div class='comment-author-date'>
               <span class='comment-author'>{{ comment.AuthorName }}</span>
@@ -31,10 +31,10 @@
           </q-item>
 
           <div style='flex-grow: 5'></div>
-          <q-btn-dropdown rounded flat dense no-icon-animation dropdown-icon='more_vert' v-if='canEdit(comment)'>
+          <q-btn-dropdown v-if='canEdit(comment)' dense dropdown-icon='more_vert' flat no-icon-animation rounded>
             <q-list>
 
-              <q-item clickable v-close-popup disable>
+              <q-item v-close-popup clickable disable>
                 <q-item-section side>
                   <q-icon name='edit' />
                 </q-item-section>
@@ -43,7 +43,7 @@
                 </q-item-section>
               </q-item>
 
-              <q-item clickable v-close-popup @click='removeComment(comment)'>
+              <q-item v-close-popup clickable @click='removeComment(comment)'>
                 <q-item-section side>
                   <q-icon name='delete' />
                 </q-item-section>
@@ -65,7 +65,7 @@
 
 </template>
 
-<script setup lang='ts'>
+<script lang='ts' setup>
 
 import { ref } from 'vue';
 import { BadRequestError } from 'boot/axios';
@@ -84,9 +84,6 @@ const q = useQuasar();
 const router = useRouter();
 
 let newComment = ref<string>('');
-
-// populate the store's comments on creation, which follows the artwork's store setup
-as.getComments();
 
 function getInitials(fullName: string): string {
   return fullName.split(' ').map(name => name.charAt(0)).join('');
@@ -148,7 +145,7 @@ function goToProfile(comment: ArtworkComment): void {
 
 </script>
 
-<style scoped lang='scss'>
+<style lang='scss' scoped>
 
 // about ten words length for each line
 $comment-length: 50ch;

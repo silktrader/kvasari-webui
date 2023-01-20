@@ -1,59 +1,59 @@
 <template>
 
-  <section class='artwork-image' v-if='artwork'>
+  <section v-if='artwork' class='artwork-image'>
     <!--the id serves as a scrolling target-->
-    <img id='image' :src='imgUrl' :alt='artwork.Title' class='shadow-20'>
+    <img id='image' :alt='artwork.Title' :src='imgUrl' class='shadow-20'>
 
     <div class='caption'>
-      <q-btn square flat class='caption-box info-button' :class='captionBox' @click='scrollToDetails'>
+      <q-btn :class='captionBox' class='caption-box info-button' flat square @click='scrollToDetails'>
         <div class='caption-box-label'>i</div>
       </q-btn>
-      <div class='caption-text' :class='captionTextClass'>
+      <div :class='captionTextClass' class='caption-text'>
         <span>{{ artwork.Title || 'Untitled' }}</span>
-        <span class='author-name' v-show='artwork.Author.Name'>, by {{ artwork.Author.Name }}</span>
+        <span v-show='artwork.Author.Name' class='author-name'>, by {{ artwork.Author.Name }}</span>
       </div>
       <div style='flex-grow: 10'></div>
     </div>
 
   </section>
 
-  <section class='artwork-details' id='details' v-if='artwork'>
+  <section v-if='artwork' id='details' class='artwork-details'>
 
     <div class='details-header'>
-      <q-btn square flat icon='close' class='caption-box close-button' @click='scrollToImage' />
+      <q-btn class='caption-box close-button' flat icon='close' square @click='scrollToImage' />
       <span class='details-title'>
         {{ detailsTitle }}
       </span>
 
       <!--Title Editing-->
-      <q-btn round outline color='accent' icon='edit' class='title-edit' v-if='isEditing'>
-        <q-popup-edit v-model='artwork.Title'
+      <q-btn v-if='isEditing' class='title-edit' color='accent' icon='edit' outline round>
+        <q-popup-edit v-slot='scope'
+                      v-model='artwork.Title'
                       :cover='false'
                       :offset='[0, 10]'
-                      v-slot='scope'
                       :validate='v => !!v'
                       @save='updateTitle'>
-          <q-input color='accent'
-                   v-model='scope.value'
-                   dense
+          <q-input v-model='scope.value'
                    autofocus
+                   color='accent'
                    counter
+                   dense
                    spellcheck='false'
-                   @keyup.enter='scope.set'
-                   style='width: 50ch'>
+                   style='width: 50ch'
+                   @keyup.enter='scope.set'>
             <template v-slot:prepend>
-              <q-icon name='edit' color='accent' />
+              <q-icon color='accent' name='edit' />
             </template>
             <template v-slot:after>
               <q-btn
-                flat dense icon='cancel'
+                dense flat icon='cancel'
                 @click.stop.prevent='scope.cancel'
               />
 
               <q-btn
-                flat dense icon='check_circle'
+                :disable='scope.validate(scope.value) === false || scope.initialValue === scope.value' dense flat
+                icon='check_circle'
                 @click.stop.prevent='scope.set'
-                :disable='scope.validate(scope.value) === false || scope.initialValue === scope.value'
               />
             </template>
           </q-input>
@@ -62,7 +62,7 @@
 
     </div>
 
-    <section class='details-description' v-intersection='onShowDetails'>
+    <section v-intersection='onShowDetails' class='details-description'>
       {{ artwork.Description }}
     </section>
 
@@ -70,15 +70,16 @@
 
       <div class='artist'>
         <q-avatar size='120px' @click='goToArtist'>
-          <img src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'
-               class='artist-avatar' alt='User Avatar'>
+          <img alt='User Avatar'
+               class='artist-avatar'
+               src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'>
         </q-avatar>
 
-        <aside class='user-name-alias' v-if='isOwner' @click='goToArtist'>
+        <aside v-if='isOwner' class='user-name-alias' @click='goToArtist'>
           <span><em>You</em></span>
         </aside>
 
-        <aside class='user-name-alias' v-else @click='goToArtist'>
+        <aside v-else class='user-name-alias' @click='goToArtist'>
           <span>{{ artwork.Author.Name }}</span>
           <span class='artist-alias'>@{{ artwork.Author.Alias }}</span>
         </aside>
@@ -88,12 +89,12 @@
           <q-toggle
             v-if='isOwner'
             v-model='isEditing'
-            size='xl'
             color='accent'
             icon='edit'
+            size='xl'
           />
-          <q-btn color='negative' label='Delete' v-show='canDelete' @click='deleteArtwork' />
-          <q-btn outline color='primary' label='Follow' v-if='canFollow' />
+          <q-btn v-show='canDelete' color='negative' label='Delete' @click='deleteArtwork' />
+          <q-btn v-if='canFollow' color='primary' label='Follow' outline />
         </section>
 
       </div>
@@ -119,16 +120,14 @@
 
 </template>
 
-<script setup lang='ts'>
+<script lang='ts' setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { api, NotFoundError } from 'boot/axios';
 import { date, scroll, useQuasar } from 'quasar';
 import utilities from 'src/utilities/utilities';
 import { useUserStore } from 'stores/user-store';
 import { useArtworkStore } from 'stores/artwork-store';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
-
 
 const props = defineProps<{ artworkId: string }>();
 const q = useQuasar();
@@ -144,20 +143,6 @@ const isEditing = ref(false);
 const imgUrl = ref<string>('');
 const detailsVisible = ref<boolean>(false);
 const { getScrollTarget, setVerticalScrollPosition } = scroll;
-
-// a flag to indicate whether edit controls show on the page
-// const editMode = ref<boolean>(false);
-
-// load the artwork's data on creation
-try {
-  as.setArtwork(props.artworkId);
-} catch (error) {
-  if (error instanceof NotFoundError) {
-    q.notify({ type: 'negative', message: 'Artwork not found.' });
-  } else {
-    q.notify({ type: 'negative', message: 'Couldn\'t load the artwork\'s data, due to an unknown error' });
-  }
-}
 
 const dating = computed(() => {
   if (artwork.value?.Created) {
@@ -191,9 +176,8 @@ const canDelete = computed(() => isOwner.value && isEditing.value);
 // a valid target to scroll to
 const imageTarget = getScrollTarget(document.getElementById('image') as HTMLElement);
 
-// tk substitute
 onMounted(async () => {
-  imgUrl.value = URL.createObjectURL(await api.get(`http://localhost:3000/artworks/${props.artworkId}/image`, { responseType: 'blob' }).then(response => response.data));
+  imgUrl.value = URL.createObjectURL(await as.getImageBlob(props.artworkId));
 });
 
 onBeforeUnmount(() => {
@@ -256,7 +240,7 @@ function goToArtist(): void {
 
 </script>
 
-<style scoped lang='scss'>
+<style lang='scss' scoped>
 
 .artwork-image {
   position: relative; // must set to absolute for the caption to be absolute

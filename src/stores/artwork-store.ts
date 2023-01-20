@@ -3,69 +3,41 @@ import { readonly, ref } from 'vue';
 import { api } from 'boot/axios';
 import { useUserStore } from 'stores/user-store';
 import { ArtworkComment } from 'src/models/artwork-comment';
-
-interface ArtworkResponse {
-  Author: Author;
-  Title: string;
-  Type: string; // tk
-  Format: string; // tk
-  Description: string;
-  Year: number;
-  Location: string;
-  Created: Date;
-  Added: Date;
-  Updated: Date;
-  Comments: number;
-  Reactions: number;
-}
-
-interface Author {
-  Alias: string;
-  Name: string;
-  FollowsUser: boolean;
-  FollowedByUser: boolean;
-}
-
-interface Artwork extends ArtworkResponse {
-  Id: string;
-}
+import { Artwork } from 'src/models/artwork';
 
 export const useArtworkStore = defineStore('artwork', () => {
-  const artwork = ref<Artwork>();
+  const artwork = ref<Artwork>({} as Artwork);
   const comments = ref<ArtworkComment[]>([]);
 
-  async function setArtwork(id: string) {
-    artwork.value = { ...(await getData(id)), Id: id };
+  // Populates the store's `artwork` with its details.
+  async function setArtwork(id: string): Promise<void> {
+    artwork.value = { ...(await api.get<Artwork>(`/artworks/${id}/data`)).data, Id: id };
   }
 
-  async function getData(id: string) {
-    return (await api.get<Artwork>(`/artworks/${id}/data`)).data;
-  }
-
-  async function getImageBlob(artworkId: string): Promise<Blob | MediaSource> {
+  async function getImageBlob(id: string): Promise<Blob | MediaSource> {
     return (
-      await api.get(`http://localhost:3000/artworks/${artworkId}/image`, {
-        responseType: 'blob'
-      })
+      await api.get(`/artworks/${id}/image`, { responseType: 'blob' })
     ).data;
   }
 
+  // Populates the store's comments.
+  async function getComments(id: string): Promise<void> {
+    comments.value = (await api.get<ArtworkComment[]>(`/artworks/${id}/comments`)).data;
+  }
+
   async function updateTitle(newTitle: string) {
-    if (!artwork.value) {
-      throw new Error('Undefined artwork');
-    }
     await api.put(`/artworks/${artwork.value.Id}/title`, { Title: newTitle });
     artwork.value.Title = newTitle;
   }
 
   async function removeArtwork() {
     await api.delete(`/artworks/${artwork.value?.Id}`);
-    artwork.value = undefined;
-    comments.value = [];
+    clear();
   }
 
-  async function getComments() {
-    comments.value = (await api.get<ArtworkComment[]>(`/artworks/${artwork.value?.Id}/comments`)).data;
+  function clear() {
+    artwork.value = {} as Artwork;
+    comments.value = [];
   }
 
   async function addComment(contents: string): Promise<void> {
@@ -96,6 +68,7 @@ export const useArtworkStore = defineStore('artwork', () => {
     comments,
     getComments,
     addComment,
-    removeComment
+    removeComment,
+    clear
   };
 });

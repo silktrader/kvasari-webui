@@ -5,7 +5,7 @@
     <suspense>
 
       <template #default>
-        <main class='artwork-container'>
+        <main v-if='hasArtwork' class='artwork-container'>
           <ArtworkDetailsComponent :artwork-id='artworkId'></ArtworkDetailsComponent>
           <ArtworkReactionsComponent :artwork-id='artworkId'></ArtworkReactionsComponent>
           <ArtworkCommentsComponent :artwork-id='artworkId'></ArtworkCommentsComponent>
@@ -22,43 +22,67 @@
 
 </template>
 
-<script setup lang='ts'>
-
-import { ref, watch } from 'vue';
+<script lang='ts' setup>
 import ArtworkDetailsComponent from 'components/ArtworkDetailsComponent.vue';
-import { useRoute } from 'vue-router';
 import ArtworkCommentsComponent from 'components/ArtworkCommentsComponent.vue';
 import ArtworkReactionsComponent from 'components/ArtworkReactionsComponent.vue';
-
-
-interface Comment {
-  Id: string;
-  AuthorAlias: string;
-  Date: Date;
-  Text: string;
-}
-
-interface Reaction {
-  AuthorAlias: string;
-  Type: string;
-}
+import { computed, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { useArtworkStore } from 'stores/artwork-store';
+import { useQuasar } from 'quasar';
+import { NotFoundError } from 'boot/axios';
 
 const route = useRoute();
+const as = useArtworkStore();
+const q = useQuasar();
 
-let artworkId = ref<string>('');
+const artworkId = ref<string>();
 
 // watch a getter instead of the whole route
 watch(() => route.params.artworkId, async newId => {
-  artworkId.value = newId as string;
+  // initialise the store child components rely on; requests can be made in parallel as they are independent
+  // clear the store when navigating away
+  if (newId) {
+    artworkId.value = newId as string;
+    await setArtwork(artworkId.value);
+    await loadComments(artworkId.value);
+  } else {
+    artworkId.value = undefined;
+    as.clear();
+  }
 }, { immediate: true });
 
-const comments = ref<Comment[]>([]);
-const reactions = ref<Reaction[]>([]);
+// Determines whether the artwork store has been initialised with basic data.
+const hasArtwork = computed(() => !!as.artwork.Id);
 
+// Loads the artwork's data on creation.
+async function setArtwork(artworkId: string): Promise<void> {
+  try {
+    await as.setArtwork(artworkId);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      q.notify({ type: 'negative', message: 'Artwork not found.' });
+    } else {
+      q.notify({ type: 'negative', message: 'Server error while loading the artwork\'s data.' });
+    }
+  }
+}
 
+// Populate the store's comments.
+async function loadComments(artworkId: string): Promise<void> {
+  try {
+    await as.getComments(artworkId);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      q.notify({ type: 'negative', message: 'Artwork not found.' });
+    } else {
+      q.notify({ type: 'negative', message: 'Server error while loading the artwork\'s comments.' });
+    }
+  }
+}
 </script>
 
-<style scoped lang='scss'>
+<style lang='scss' scoped>
 
 @import '../css/quasar.variables.scss';
 
