@@ -7,13 +7,22 @@
     <q-form @submit='addComment'>
       <div class='form-contents'>
         <div class='form-text'>
-          <q-input v-model='newComment' autogrow class='comment-input' clearable label='New Comment'
+          <q-input v-model='newComment'
+                   autogrow
+                   class='comment-input'
+                   label='New Comment'
                    placeholder='Leave a constructive, possibly articulate, comment.'
                    standout
-                   type='textarea' />
+                   type='textarea'>
+            <template v-if='newComment' v-slot:append>
+              <q-icon class='cursor-pointer' name='cancel' @click.stop.prevent="newComment = ''" />
+            </template>
+          </q-input>
         </div>
+
         <div class='form-submit'>
-          <q-btn color='primary' flat icon='send' round type='submit' />
+          <q-tooltip>Send a comment, provided it's longer than five characters.</q-tooltip>
+          <q-btn :disable='newComment.length < 6' flat icon='send' round type='submit' />
         </div>
       </div>
     </q-form>
@@ -153,6 +162,15 @@ $comment-length: 50ch;
 .comments {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.comments > header {
+  display: flex;
+  font-size: x-large;
+  font-weight: bold;
+  margin: auto;
+  font-family: 'Arapey', serif;
 }
 
 ol {
@@ -176,10 +194,10 @@ li {
   article {
     font-size: medium;
   }
-}
 
-header {
-  display: flex;
+  header {
+    display: flex;
+  }
 }
 
 .comment-header {
@@ -211,8 +229,6 @@ header {
 
 .form-contents {
   width: 400px;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
   display: flex;
   align-items: center;
   gap: 10px;
