@@ -1,23 +1,11 @@
 <template>
 
   <q-page>
-
-    <suspense>
-
-      <template #default>
-        <main v-if='hasArtwork' class='artwork-container'>
-          <ArtworkDetailsComponent></ArtworkDetailsComponent>
-          <ArtworkReactionsComponent></ArtworkReactionsComponent>
-          <ArtworkCommentsComponent></ArtworkCommentsComponent>
-        </main>
-
-      </template>
-
-      <template #fallback>
-        Loading ...
-
-      </template>
-    </suspense>
+    <main v-if='hasArtwork' class='artwork-container'>
+      <ArtworkDetailsComponent></ArtworkDetailsComponent>
+      <ArtworkReactionsComponent></ArtworkReactionsComponent>
+      <ArtworkCommentsComponent></ArtworkCommentsComponent>
+    </main>
   </q-page>
 
 </template>

@@ -93,7 +93,7 @@ export const useArtworkStore = defineStore('artwork', () => {
     getImageBlob,
     updateTitle,
     removeArtwork,
-    comments,
+    comments: readonly(comments),
     getComments,
     addComment,
     removeComment,

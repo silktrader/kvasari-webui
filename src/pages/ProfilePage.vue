@@ -18,6 +18,9 @@
 
             <!-- Name editing shortcut for the profile owner -->
             <q-btn v-if='isUser' icon='las la-user-edit' outline round>
+              <q-tooltip>
+                Edit your name
+              </q-tooltip>
               <q-popup-edit v-slot='scope'
                             v-model='artist.Name'
                             :cover='false'
@@ -84,14 +87,29 @@
       </section>
 
       <section class='user-stats'>
-        <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.Followers }}</b> Followers</span></q-btn>
-        <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.Following }}</b> Following</span></q-btn>
-        <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.Artworks }}</b> Artworks</span></q-btn>
+        <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.Followers }}</b> Followers</span>
+          <q-tooltip>
+            Users who follow {{ artist.Name }}
+          </q-tooltip>
+        </q-btn>
+        <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.Following }}</b> Following</span>
+          <q-tooltip>
+            Users whom {{ artist.Name }} is following
+          </q-tooltip>
+        </q-btn>
+        <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.Artworks }}</b> Artworks</span>
+          <q-tooltip>
+            Artworks uploaded by {{ artist.Name }}
+          </q-tooltip>
+        </q-btn>
         <span style='flex-grow: 3'></span>
         <q-btn dense flat no-caps>
           <span class='user-stat-label'>
             <b>{{ artist.Comments }}</b>
             <q-icon name='comment' />
+            <q-tooltip>
+            Comments <i>received</i> by {{ artist.Name }}
+          </q-tooltip>
           </span>
         </q-btn>
 
@@ -99,6 +117,9 @@
           <span class='user-stat-label'>
             <b>{{ artist.Reactions }}</b>
             <q-icon name='recommend' />
+            <q-tooltip>
+            Reactions <i>received</i> by {{ artist.Name }}
+          </q-tooltip>
           </span>
         </q-btn>
         <span style='flex-grow: 1'></span>

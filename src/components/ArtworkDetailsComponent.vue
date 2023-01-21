@@ -4,7 +4,7 @@
     <!--the id serves as a scrolling target-->
     <img id='image' :alt='artwork.Title' :src='imgUrl' class='shadow-20'>
 
-    <div class='caption'>
+    <div class='caption ui'>
       <q-btn :class='captionBox' class='caption-box info-button' flat square @click='scrollToDetails'>
         <div class='caption-box-label'>i</div>
       </q-btn>
@@ -134,6 +134,10 @@ const us = useUserStore();
 const as = useArtworkStore();
 const router = useRouter();
 
+let timer: any = null;
+let uiElems: any[] = [];
+let hiddenUi = false;
+
 const { artwork } = storeToRefs(as);
 
 // Determines whether the artwork is being edited by the user, which triggers various controls.
@@ -177,11 +181,36 @@ const imageTarget = getScrollTarget(document.getElementById('image') as HTMLElem
 
 onMounted(async () => {
   imgUrl.value = URL.createObjectURL(await as.getImageBlob(as.artwork.Id));
+  uiElems = Array.prototype.slice.call(document.querySelectorAll('.ui'));
+  window.addEventListener('mousemove', restartTimer, false);
+  timer = setTimeout(() => {
+    hideUiElements();
+  }, 2500);
 });
 
 onBeforeUnmount(() => {
   URL.revokeObjectURL(imgUrl.value);
+  window.removeEventListener('mousemove', restartTimer, false);
+  clearTimeout(timer);
 });
+
+function restartTimer(): void {
+  clearTimeout(timer);
+  if (hiddenUi) showUiElements();
+  timer = setTimeout(() => {
+    hideUiElements();
+  }, 2500);
+}
+
+function hideUiElements(): void {
+  uiElems.forEach(e => e.classList.add('hide'));
+  hiddenUi = true;
+}
+
+function showUiElements(): void {
+  uiElems.forEach(e => e.classList.remove('hide'));
+  hiddenUi = false;
+}
 
 function onShowDetails(e: { isIntersecting: boolean; }): void {
   detailsVisible.value = e.isIntersecting;
