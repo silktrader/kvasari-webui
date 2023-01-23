@@ -414,6 +414,10 @@ function goToArtist(): void {
   cursor: pointer;
 }
 
+.artist:hover {
+  text-decoration: underline;
+}
+
 .artist-avatar {
   object-fit: cover;
 }

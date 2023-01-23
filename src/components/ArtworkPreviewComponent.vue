@@ -1,13 +1,14 @@
 <template>
 
-  <section class='preview' @click='navigateTo(artwork.Id)'>
+  <section class='preview' @click='viewArtwork(artwork.Id)'>
     <img :alt="`${artwork.Title ?? 'Untitled'}, by ${props.author?.Name }`" :src='imgUrl' />
     <aside class='overlay'>
 
       <section class='metadata'>
         <div class='metadata-space' />
         <span class='title'>{{ artwork.Title ?? 'Untitled' }}</span>
-        <span v-if='showAuthor' class='artist'>{{ props.author.Name }}</span>
+        <span v-if='showAuthor' class='artist' @click.stop='viewArtist(props.author.Alias)'>{{ props.author.Name
+          }}</span>
         <div class='metadata-space' />
         <span class='added'>added {{ friendlyDate }}<q-tooltip>Added on {{ formatLongDate(artwork.Added)
           }}</q-tooltip></span>
@@ -102,8 +103,12 @@ const friendlyDate = computed(() =>
 
 const formatLongDate = (date: string) => utilities.FormatLongDate(date);
 
-function navigateTo(artworkId: string): void {
+function viewArtwork(artworkId: string): void {
   router.push(`/artworks/${artworkId}`);
+}
+
+function viewArtist(alias: string): void {
+  router.push(`/${alias}`);
 }
 
 function editTitle() {
@@ -203,6 +208,10 @@ img {
 .artist {
   color: #C8BCAC;
   font-size: large;
+}
+
+.artist:hover {
+  text-decoration: underline;
 }
 
 .added {
