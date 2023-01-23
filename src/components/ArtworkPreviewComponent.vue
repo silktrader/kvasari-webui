@@ -9,7 +9,8 @@
         <span class='title'>{{ artwork.Title ?? 'Untitled' }}</span>
         <span v-if='showAuthor' class='artist'>{{ props.author.Name }}</span>
         <div class='metadata-space' />
-        <span class='added'>added {{ friendlyDate }}</span>
+        <span class='added'>added {{ friendlyDate }}<q-tooltip>Added on {{ formatLongDate(artwork.Added)
+          }}</q-tooltip></span>
       </section>
 
       <section class='overlay-right'>
@@ -97,8 +98,9 @@ const isUserAuthor = computed(() => props.author.Alias === us.user.Alias);
 const showAuthor = computed(() => props.author && props.author.Alias !== ars.artist.Alias);
 
 const friendlyDate = computed(() =>
-  us.timer ? utilities.FormatRelativeDate(new Date(Date.parse(props.artwork.Added))) : ''
-);
+  us.timer ? utilities.FormatRelativeDate(props.artwork.Added) : null);
+
+const formatLongDate = (date: string) => utilities.FormatLongDate(date);
 
 function navigateTo(artworkId: string): void {
   router.push(`/artworks/${artworkId}`);

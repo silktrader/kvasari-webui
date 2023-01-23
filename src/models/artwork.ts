@@ -8,9 +8,9 @@ export interface ArtworkResponse {
   Description: string;
   Year: number;
   Location: string;
-  Created: Date;
-  Added: Date;
-  Updated: Date;
+  Created: string;
+  Added: string;
+  Updated: string;
   Comments: number;
   Reactions: number;
 }

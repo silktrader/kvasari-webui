@@ -109,8 +109,8 @@
 
       <div class='dates'>
         <aside class='dates-date'><span>Dating:</span><span>{{ dating }}</span></aside>
-        <aside class='dates-date'><span>Added:</span><span>{{ formatRelativeDate(artwork.Added) }}</span></aside>
-        <aside class='dates-date'><span>Updated:</span><span>{{ formatRelativeDate(artwork.Updated) }}</span></aside>
+        <aside class='dates-date'><span>Added:</span><span>{{ formatLongDate(artwork.Added) }}</span></aside>
+        <aside class='dates-date'><span>Updated:</span><span>{{ formatLongDate(artwork.Updated) }}</span></aside>
       </div>
 
     </section>
@@ -233,9 +233,8 @@ function formatType(type: string): string {
   return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
 }
 
-function formatRelativeDate(date: Date): string {
-  return utilities.FormatRelativeDate(date);
-}
+// Prints a date of the form: Saturday, 21st of January 2022
+const formatLongDate = (date: string) => utilities.FormatLongDate(date);
 
 // Attempts to edit the artwork's title.
 async function updateTitle(newTitle: string): Promise<void> {
