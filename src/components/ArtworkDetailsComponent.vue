@@ -93,7 +93,7 @@
             icon='edit'
             size='xl'
           />
-          <q-btn v-show='canDelete' color='negative' label='Delete' @click='deleteArtwork' />
+          <q-btn v-show='canDelete' color='negative' label='Delete' @click='removeArtwork' />
           <q-btn v-if='canFollow' color='primary' label='Follow' outline />
         </section>
 
@@ -128,6 +128,7 @@ import { useUserStore } from 'stores/user-store';
 import { useArtworkStore } from 'stores/artwork-store';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
+import { BadRequestError } from 'boot/axios';
 
 const q = useQuasar();
 const us = useUserStore();
@@ -253,10 +254,17 @@ async function updateTitle(newTitle: string): Promise<void> {
   }
 }
 
-async function deleteArtwork(): Promise<void> {
+async function removeArtwork(): Promise<void> {
   try {
-    console.log('er');
+    // cache name before flushing store
+    const identifier = artwork.value.Title ?? 'Untitled';
+    await as.removeArtwork();
+    router.back();
+    q.notify({ type: 'positive', message: `Removed ${identifier}.`, html: true });
   } catch (e) {
+    if (e instanceof BadRequestError) {
+      q.notify({ type: 'negative', message: 'Error while removing the artwork: </br>${e.Message}', html: true });
+    }
     console.error(e);
   }
 }
@@ -414,10 +422,6 @@ function goToArtist(): void {
   cursor: pointer;
 }
 
-.artist:hover {
-  text-decoration: underline;
-}
-
 .artist-avatar {
   object-fit: cover;
 }
@@ -430,6 +434,10 @@ function goToArtist(): void {
   margin-bottom: 2rem;
   gap: 10px;
   font-size: medium;
+}
+
+.user-name-alias:hover {
+  text-decoration: underline;
 }
 
 .artist-alias {
