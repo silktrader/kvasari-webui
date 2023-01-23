@@ -6,10 +6,13 @@ import { ArtworkStreamPreview } from 'src/models/artwork-preview';
 export const useStreamStore = defineStore('stream', () => {
   const artworks = ref<ArtworkStreamPreview[]>([]);
 
-  // Tracks whence to get the next artworks from.
-  const earliestArtworkDate = ref<string>(new Date().toISOString());
+  const now = () => new Date().toISOString();
 
-  const lastRequest = ref<string>(new Date().toISOString());
+  // Tracks whence to get the next artworks from.
+  const earliestArtworkDate = ref<string>(now());
+
+  // Signals the time when the last request succeeded, to help paginate results.
+  const lastRequest = ref<string>(now());
 
   // Determines whether there are more artworks to fetch.
   const exhaustedStream = ref<boolean>(false);
@@ -17,13 +20,15 @@ export const useStreamStore = defineStore('stream', () => {
   // Initialises the store with empty data and sensible defaults.
   async function clear() {
     artworks.value = [];
-    earliestArtworkDate.value = new Date().toISOString();
+    earliestArtworkDate.value = now();
+    lastRequest.value = now();
   }
 
-  async function updateStream(
-    userAlias: string,
-    latest: string
-  ) {
+  // Updates a collection of artworks, ordered from oldest to most recent. Returns three collections:
+  //  - artworks older than the latest fetched one
+  //  - artworks added after the last request timestamp
+  //  - IDs of artworks deleted but possibly displayed
+  async function updateStream(userAlias: string, latest: string) {
     const { data } = await api.get<{
       Artworks: ArtworkStreamPreview[];
       NewArtworks: ArtworkStreamPreview[];
@@ -31,7 +36,7 @@ export const useStreamStore = defineStore('stream', () => {
     }>(`/users/${userAlias}/stream`, { params: { since: lastRequest.value, latest } });
 
     // update the last request's timestamp so future requests can account for new and deleted artworks
-    lastRequest.value = new Date().toISOString();
+    lastRequest.value = now();
 
     // update displayed artworks by including new ones, removing deleted ones and adding newly fetched ones
     artworks.value = [...data.NewArtworks, ...artworks.value.filter(a => !data.DeletedIds.includes(a.Id)), ...data.Artworks];
