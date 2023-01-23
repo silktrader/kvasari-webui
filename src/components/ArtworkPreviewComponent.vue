@@ -1,7 +1,14 @@
 <template>
 
   <section class='preview' @click='viewArtwork(artwork.Id)'>
-    <img :alt="`${artwork.Title ?? 'Untitled'}, by ${props.author?.Name }`" :src='imgUrl' />
+    <q-inner-loading :showing='loading'>
+      <q-spinner-cube
+        :thickness='3'
+        color='primary'
+        size='150px'
+      />
+    </q-inner-loading>
+    <img v-if='!loading' :alt="`${artwork.Title ?? 'Untitled'}, by ${props.author?.Name }`" :src='imgUrl' />
     <aside class='overlay'>
 
       <section class='metadata'>
@@ -31,7 +38,7 @@
           <q-btn icon='more_vert' outline round @click.stop>
             <q-menu>
               <q-list style='min-width: 100px'>
-                <q-item v-close-popup clickable disable @click='editTitle'>
+                <q-item v-close-popup clickable disable>
                   <q-item-section>Edit Title</q-item-section>
                 </q-item>
                 <q-item v-close-popup clickable @click='removeArtwork'>
@@ -82,9 +89,23 @@ const ars = useArtistStore();
 const us = useUserStore();
 const q = useQuasar();
 const imgUrl = ref<string>();
+const loading = ref<boolean>();
 
 onMounted(async () => {
-  imgUrl.value = URL.createObjectURL(await as.getImageBlob(props.artwork.Id));
+  try {
+    loading.value = true;
+    imgUrl.value = URL.createObjectURL(await as.getImageBlob(props.artwork.Id));
+    // setTimeout(() => {
+    //   as.getImageBlob(props.artwork.Id).then(blob => {
+    //     imgUrl.value = URL.createObjectURL(blob);
+    //     loading.value = false;
+    //   });
+    // }, 1000);
+    loading.value = false;
+  } catch (e) {
+    console.error(e);
+    q.notify({ type: 'negative', message: 'An error occurred while downloading the artwork\'s image.' });
+  }
 });
 
 onBeforeUnmount(() => {
@@ -109,10 +130,6 @@ function viewArtwork(artworkId: string): void {
 
 function viewArtist(alias: string): void {
   router.push(`/${alias}`);
-}
-
-function editTitle() {
-  console.log('Unimplemented');
 }
 
 function removeArtwork() {
@@ -152,7 +169,6 @@ img {
   object-fit: cover;
   width: 100%;
   height: 100%;
-  vertical-align: middle;
   border-radius: $border-radius;
 }
 
