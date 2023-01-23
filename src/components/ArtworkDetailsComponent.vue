@@ -283,6 +283,7 @@ function goToArtist(): void {
 #image {
   object-fit: contain;
   height: 100vh;
+  max-width: 99vw;
 }
 
 // caption
