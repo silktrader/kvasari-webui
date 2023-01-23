@@ -1,6 +1,8 @@
 <template>
 
-  <section class='preview' @click='viewArtwork(artwork.Id)'>
+  <q-btn v-if='retry' color='primary' label='Retry' outline size='lg' @click.stop='getBlobUrl()'></q-btn>
+
+  <section v-else class='preview' @click='viewArtwork(artwork.Id)'>
     <q-inner-loading :showing='loading'>
       <q-spinner-cube
         :thickness='3'
@@ -90,22 +92,10 @@ const us = useUserStore();
 const q = useQuasar();
 const imgUrl = ref<string>();
 const loading = ref<boolean>();
+const retry = ref<boolean>(false);
 
 onMounted(async () => {
-  try {
-    loading.value = true;
-    imgUrl.value = URL.createObjectURL(await as.getImageBlob(props.artwork.Id));
-    // setTimeout(() => {
-    //   as.getImageBlob(props.artwork.Id).then(blob => {
-    //     imgUrl.value = URL.createObjectURL(blob);
-    //     loading.value = false;
-    //   });
-    // }, 1000);
-    loading.value = false;
-  } catch (e) {
-    console.error(e);
-    q.notify({ type: 'negative', message: 'An error occurred while downloading the artwork\'s image.' });
-  }
+  await getBlobUrl(2);
 });
 
 onBeforeUnmount(() => {
@@ -123,6 +113,27 @@ const friendlyDate = computed(() =>
   us.timer ? utilities.FormatRelativeDate(props.artwork.Added) : null);
 
 const formatLongDate = (date: string) => utilities.FormatLongDate(date);
+
+async function getBlobUrl(retries = 0): Promise<void> {
+  try {
+    loading.value = true;
+    imgUrl.value = URL.createObjectURL(await as.getImageBlob(props.artwork.Id));
+    loading.value = false;
+  } catch (e) {
+    console.error(e);
+    q.notify({
+      type: 'negative',
+      message: `An error occurred while downloading an image. </br> Automatic retries: ${retries ? retries : 'no more'}`,
+      html: true
+    });
+    if (retries > 0) {
+      await getBlobUrl(retries - 1);
+    } else {
+      loading.value = false;
+      retry.value = true;
+    }
+  }
+}
 
 function viewArtwork(artworkId: string): void {
   router.push(`/artworks/${artworkId}`);
