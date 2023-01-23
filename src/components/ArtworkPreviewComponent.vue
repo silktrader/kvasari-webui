@@ -9,7 +9,7 @@
         <span class='title'>{{ artwork.Title ?? 'Untitled' }}</span>
         <span v-if='showAuthor' class='artist'>{{ props.author.Name }}</span>
         <div class='metadata-space' />
-        <span class='added'>added {{ formatRelativeDate(artwork.Added) }}</span>
+        <span class='added'>added {{ friendlyDate }}</span>
       </section>
 
       <section class='overlay-right'>
@@ -96,12 +96,12 @@ const isUserAuthor = computed(() => props.author.Alias === us.user.Alias);
 // Determines whether previews should display the artwork author's full name: stream previews do, profile ones don't.
 const showAuthor = computed(() => props.author && props.author.Alias !== ars.artist.Alias);
 
+const friendlyDate = computed(() =>
+  us.timer ? utilities.FormatRelativeDate(new Date(Date.parse(props.artwork.Added))) : ''
+);
+
 function navigateTo(artworkId: string): void {
   router.push(`/artworks/${artworkId}`);
-}
-
-function formatRelativeDate(date: Date): string {
-  return utilities.FormatRelativeDate(date);
 }
 
 function editTitle() {

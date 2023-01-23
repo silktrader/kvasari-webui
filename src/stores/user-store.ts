@@ -20,6 +20,12 @@ export const useUserStore = defineStore('user', () => {
   // attempt to set the user on creation, from local storage, fall back to type-safe empty object
   const user = ref<User>(JSON.parse(localStorage.getItem(userKey) ?? 'null') ?? ({} as User));
 
+  // a two seconds timer components can observe
+  const timer = ref(new Date());
+
+  // sets a clock that component can synchronise on, for updating time related variables for instance
+  setInterval(() => timer.value = new Date(), 2000);
+
   // set or clear the storage depending on the user's value
   watch(user, async newUser => {
     localStorage.clear();
@@ -84,6 +90,7 @@ export const useUserStore = defineStore('user', () => {
 
   return {
     user: readonly(user),
+    timer: readonly(timer),
     Register,
     SignIn,
     SignOut,

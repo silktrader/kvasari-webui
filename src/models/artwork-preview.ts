@@ -8,7 +8,7 @@ export interface ArtworkPreview {
   Comments: number;
   Reactions: number;
   Title?: string;
-  Added?: string;
+  Added: string;
 }
 
 // Provides lightweight artwork summaries, to be included in user profiles.

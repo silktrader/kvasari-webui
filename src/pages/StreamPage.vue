@@ -32,7 +32,7 @@
 </template>
 
 <script lang='ts' setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { useStreamStore } from 'stores/stream-store';
 import { useUserStore } from 'stores/user-store';
 import ArtworkPreviewComponent from 'components/ArtworkPreviewComponent.vue';
@@ -68,6 +68,11 @@ const selectedOrder = ref(order.ReverseChronological);
 
 onMounted(() => {
   ss.clear();
+
+});
+
+onUnmounted(() => {
+  ss.clear();
 });
 
 async function onLoad(index: number, done: any): Promise<void> {
@@ -88,6 +93,7 @@ async function update(): Promise<void> {
     console.error(e);
   }
 }
+
 
 </script>
 
