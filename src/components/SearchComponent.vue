@@ -2,17 +2,17 @@
 
   <div class='q-gutter-md row'>
     <q-select
-      filled
       v-model='searchText'
-      use-input
-      hide-selected
-      fill-input
-      input-debounce='200'
-      clearable
       :options='searchResults'
+      clearable
+      fill-input
+      filled
+      hide-selected
+      input-debounce='200'
+      style='width: 250px; padding-bottom: 32px'
+      use-input
       @filter='filterResults'
       @update:model-value='onResultSelection'
-      style='width: 250px; padding-bottom: 32px'
     >
       <template v-slot:prepend>
         <!--              <q-icon v-if="searchText !== ''" name='close' @click.stop.prevent="searchText = ''"-->
@@ -30,11 +30,12 @@
 
       <template v-slot:option='scope'>
         <q-list dark separator>
-          <q-item clickable v-ripple v-bind='scope.itemProps'>
+          <q-item v-ripple clickable v-bind='scope.itemProps'>
             <q-item-section avatar>
               <q-avatar size='48px'>
-                <img src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'
-                     alt='User Avatar' class='user-avatar'>
+                <img alt='User Avatar'
+                     class='user-avatar'
+                     src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'>
               </q-avatar>
             </q-item-section>
             <!--                  <q-icon :name='scope.opt.icon' />-->
@@ -51,11 +52,11 @@
 
 </template>
 
-<script setup lang='ts'>
+<script lang='ts' setup>
 
 import { ref } from 'vue';
-import { api, baseUrl } from 'boot/axios';
-import { useUserStore, User } from 'stores/user-store';
+import { api } from 'boot/axios';
+import { User, useUserStore } from 'stores/user-store';
 import { useRouter } from 'vue-router';
 
 interface SearchResult {
@@ -71,7 +72,7 @@ const searchResults = ref<ReadonlyArray<SearchResult>>([]);
 const searchText = ref<string>('');
 
 // assumes user's authentication for the moment
-const user: User = <User>useUserStore().user;
+const us = useUserStore();
 
 function filterResults(val: string, update: any, abort: any): void {
   if (val.length < 3) {
@@ -82,10 +83,10 @@ function filterResults(val: string, update: any, abort: any): void {
   update(async () => {
     try {
       const sanitisedValue = val.toLowerCase();
-      const results = await api.get<ReadonlyArray<User>>(`${baseUrl}/users`, {
+      const results = await api.get<ReadonlyArray<User>>(`/users`, {
         params: {
           filter: sanitisedValue,
-          requester: user.Alias
+          requester: us.user.Alias
         }
       });
       searchResults.value = results.data.map(user => ({
@@ -113,7 +114,7 @@ function onResultSelection(data: { value: string }): void {
 
 </script>
 
-<style scoped lang='scss'>
+<style lang='scss' scoped>
 
 .user-avatar {
   object-fit: cover;

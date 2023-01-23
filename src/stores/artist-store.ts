@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { reactive, readonly, ref } from 'vue';
+import { readonly, ref } from 'vue';
 import { api } from 'boot/axios';
 import { ArtworkPreview } from 'src/models/artwork-preview';
 
@@ -25,40 +25,40 @@ export interface Artist {
 }
 
 export const useArtistStore = defineStore('artist', () => {
-  const artist = reactive<Artist>({} as Artist);
+  const artist = ref<Artist>({} as Artist);
   const followers = ref<UserRelation[]>([]);
   const followed = ref<UserRelation[]>([]);
 
-  // Stores the artworks uploaded by the targeted artist, and fetched by the requester, in reverse chronological order.
+  // Stores artworks uploaded by the artist, fetched by the requester, in reverse chronological order.
+  // A Map allows quick deletion of entries and ordered insertion.
   const artworks = ref<Map<string, ArtworkPreview>>(new Map());
 
   // Tracks whence to get the next artworks from.
   const earliestArtworkDate = ref<string>(new Date().toISOString());
 
-  async function loadArtistData(alias: string) {
-    const response = await api.get<Artist>(`/users/${alias}`);
-
-    // can't assign new object, must use current reference
-    Object.assign(artist, response.data);
-    artist.Alias = alias;
+  async function loadArtistData(alias: string): Promise<void> {
+    artist.value = { ...(await api.get<Artist>(`/users/${alias}`)).data, Alias: alias };
   }
 
-  function resetArtworks(): void {
+  function clear(): void {
+    artist.value = {} as Artist;
+    followers.value = [];
+    followed.value = [];
     artworks.value.clear();
     earliestArtworkDate.value = new Date().toISOString();
   }
 
-  // Load an artist's artworks, in reverse chronological order, keeping track of deletions and new uploads since the last
-  // request.
-  // Loading artworks should be performed in parallel to getting artist data, to minimise latency.
-  async function loadArtworks(userAlias: string) {
-    const response = await api.get<{
+  // Loads an artist's artworks, in reverse chronological order, keeping track of deletions and new uploads since
+  // the last request.
+  // The parameter's required to fetch artworks in parallel with the artist's details request, and minimise latency.
+  async function loadArtworks(alias: string): Promise<void> {
+    const { data } = await api.get<{
       Requested: ArtworkPreview[];
       New: ArtworkPreview[];
       Deleted: string[];
     }>('artworks', {
       params: {
-        artist: userAlias,
+        artist: alias,
         latest: new Date().toISOString(),
         since: earliestArtworkDate.value
       }
@@ -66,22 +66,24 @@ export const useArtistStore = defineStore('artist', () => {
 
     // add artworks in reverse chronological order
     // not deleting the ID property inside the object, for pure convenience
+    data.Requested.forEach(artwork => artworks.value.set(artwork.Id, artwork));
+
+    // add newly requested artworks to a temporary collection
     const newArtworks = new Map<string, ArtworkPreview>();
-    response.data.New.forEach(newArtwork => newArtworks.set(newArtwork.Id, newArtwork));
+    data.New.forEach(artwork => newArtworks.set(artwork.Id, artwork));
 
     // remove deleted artworks from current collection
-    response.data.Deleted.forEach(deletedId => artworks.value.delete(deletedId));
-
-    // add newly request artworks to current collection
-    response.data.Requested.forEach(requestedArtwork => artworks.value.set(requestedArtwork.Id, requestedArtwork));
+    data.Deleted.forEach(deletedId => artworks.value.delete(deletedId));
 
     // merge the new items with the current collection to update the latter
     artworks.value = new Map<string, ArtworkPreview>([...newArtworks, ...artworks.value]);
 
     // update timestamps to chain future requests
-    earliestArtworkDate.value = response.data.Requested.at(-1)?.Added ?? earliestArtworkDate.value;
+    earliestArtworkDate.value = data.Requested.at(-1)?.Added ?? earliestArtworkDate.value;
   }
 
+  // Adds a user uploaded artwork metadata to the store.
+  // The API request is delegated to a custom component, which conveniently handles file selection and binary upload.
   function addArtwork(id: string, format: string, updated: string): void {
     const newArtworks = new Map<string, ArtworkPreview>([[id, {
       Added: updated,
@@ -102,47 +104,47 @@ export const useArtistStore = defineStore('artist', () => {
 
     // update the state
     artworks.value.delete(artwork.Id);
-    artist.Artworks -= 1;
-    artist.Comments -= artwork.Comments;
-    artist.Reactions -= artwork.Reactions;
+    artist.value.Artworks -= 1;
+    artist.value.Comments -= artwork.Comments;
+    artist.value.Reactions -= artwork.Reactions;
   }
 
   function updateName(newName: string) {
-    artist.Name = newName;
+    artist.value.Name = newName;
   }
 
   // Add the authenticated user as an artist's follower, updating relevant variables.
   function addUserAsFollower(): void {
-    artist.FollowedByUser = true;
-    artist.Followers += 1;
+    artist.value.FollowedByUser = true;
+    artist.value.Followers += 1;
   }
 
   // Remove the authenticated user as an artist's follower, updating relevant variables.
   function removeUserAsFollower(): void {
-    artist.FollowedByUser = false;
-    artist.Followers -= 1;
+    artist.value.FollowedByUser = false;
+    artist.value.Followers -= 1;
   }
 
   // Updates the artist's details, on being blocked by the viewing user.
   function blockUser(): void {
-    artist.FollowsUser = false;
-    artist.FollowedByUser = false;
-    artist.Followers -= 1;
-    artist.BlockedByUser = true;
+    artist.value.FollowsUser = false;
+    artist.value.FollowedByUser = false;
+    artist.value.Followers -= 1;
+    artist.value.BlockedByUser = true;
   }
 
   function unblockUser(): void {
-    artist.BlockedByUser = false;
+    artist.value.BlockedByUser = false;
   }
 
   return {
     artist: readonly(artist),
     artworks: readonly(artworks),
-    followers,
-    followed,
+    followers: readonly(followers),
+    followed: readonly(followed),
     loadArtistData,
     updateName,
-    resetArtworks,
+    clear,
     loadArtworks,
     addArtwork,
     removeArtwork,

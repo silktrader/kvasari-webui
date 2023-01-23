@@ -17,9 +17,7 @@ export const useArtworkStore = defineStore('artwork', () => {
   }
 
   async function getImageBlob(id: string): Promise<Blob | MediaSource> {
-    return (
-      await api.get(`/artworks/${id}/image`, { responseType: 'blob' })
-    ).data;
+    return (await api.get(`/artworks/${id}/image`, { responseType: 'blob' })).data;
   }
 
   async function updateTitle(newTitle: string) {
@@ -45,15 +43,15 @@ export const useArtworkStore = defineStore('artwork', () => {
 
   async function addComment(contents: string): Promise<void> {
     const { user } = useUserStore(); // this isn't reactive
-    const response = await api.post<{ Id: string; Date: Date }>(`/artworks/${artwork.value?.Id}/comments`, {
+    const { data } = await api.post<{ Id: string; Date: Date }>(`/artworks/${artwork.value?.Id}/comments`, {
       Comment: contents
     });
     comments.value.push({
-      Id: response.data.Id,
+      Id: data.Id,
       AuthorAlias: user.Alias,
       AuthorName: user.Name,
       Comment: contents,
-      Date: response.data.Date
+      Date: data.Date
     });
   }
 
@@ -63,13 +61,12 @@ export const useArtworkStore = defineStore('artwork', () => {
   }
 
   async function getReactions(id: string): Promise<void> {
-    const response = await api.get<Reaction[]>(`/artworks/${id}/reactions`);
-    reactions.value = response.data;
+    reactions.value = (await api.get<Reaction[]>(`/artworks/${id}/reactions`)).data;
   }
 
   async function addReaction(type: ReactionType): Promise<void> {
-    const { user } = useUserStore();
-    const response = await api.put<{ Status: string, Date: Date }>(`/artworks/${artwork.value.Id}/reactions/${user.Alias}`, {
+    const { user } = useUserStore(); // not reactive
+    const { data } = await api.put<{ Status: string, Date: Date }>(`/artworks/${artwork.value.Id}/reactions/${user.Alias}`, {
       Reaction: type
     });
     // ensure proper removal of existing user reaction
@@ -77,28 +74,28 @@ export const useArtworkStore = defineStore('artwork', () => {
       AuthorAlias: user.Alias,
       AuthorName: user.Name,
       Reaction: type,
-      Date: response.data.Date
+      Date: data.Date
     }];
   }
 
   async function removeReaction(): Promise<void> {
-    const { user } = useUserStore();
+    const { user } = useUserStore(); // not reactive
     await api.delete(`/artworks/${artwork.value.Id}/reactions/${user.Alias}`);
     reactions.value = [...reactions.value.filter(r => r.AuthorAlias !== user.Alias)];
   }
 
   return {
     artwork: readonly(artwork),
+    comments: readonly(comments),
+    reactions: readonly(reactions),
     setArtwork,
     getImageBlob,
     updateTitle,
     removeArtwork,
-    comments: readonly(comments),
     getComments,
     addComment,
     removeComment,
     clear,
-    reactions,
     getReactions,
     addReaction,
     removeReaction

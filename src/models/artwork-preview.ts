@@ -1,4 +1,6 @@
-// Provides lightweight artwork summaries, to be included in user streams or profiles.
+import { Author } from 'src/models/author';
+
+// Provides lightweight artwork summaries, to be included in user profiles.
 export interface ArtworkPreview {
   Id: string;
   Format: string;
@@ -7,5 +9,9 @@ export interface ArtworkPreview {
   Reactions: number;
   Title?: string;
   Added?: string;
-  Author?: { Name: string, Alias: string };
+}
+
+// Provides lightweight artwork summaries, to be included in user profiles.
+export interface ArtworkStreamPreview extends ArtworkPreview {
+  Author: Author;
 }

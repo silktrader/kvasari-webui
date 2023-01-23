@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
-import { computed, ref, watch } from 'vue';
+import { computed, readonly, ref, watch } from 'vue';
 
 export interface User {
-  readonly Id: string;
-  readonly Alias: string;
-  readonly Name: string;
+  Id: string;
+  Alias: string;
+  Name: string;
 }
 
 interface RegisterUserResponse extends User {
@@ -30,29 +30,21 @@ export const useUserStore = defineStore('user', () => {
   const isAuthenticated = computed(() => !!user.value?.Id);
 
   async function Register(regData: { Alias: string; Password: string; Email: string; Name: string }) {
-    try {
-      const response = await api.post<RegisterUserResponse>('/users', regData);
-
-      // proceed to automatically sign in the user on success, additional properties won't hurt
-      user.value = { ...response.data };
-    } catch (e) {
-      // rethrow the error so components can handle it
-      // additional logic is expected here
-      throw e;
-    }
+    // proceed to automatically sign in the user on success, additional properties won't hurt
+    user.value = (await api.post<RegisterUserResponse>('/users', regData)).data;
   }
 
   async function SignIn(alias: string, password: string) {
     try {
       localStorage.clear();
-      const response = await api.post<User & { Status?: string }>('/sessions', {
+      const { data } = await api.post<User & { Status?: string }>('/sessions', {
         alias: alias,
         password: password
       });
 
       // remove unnecessary data, debatable mutation
-      delete response.data.Status;
-      user.value = { ...response.data };
+      delete data.Status;
+      user.value = { ...data };
     } catch (e) {
       localStorage.clear();
 
@@ -66,14 +58,11 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function updateName(name: string): Promise<void> {
-    await api.put(`/users/${user.value.Alias}/name`, {
-      name
-    });
-
     // updating the Name will trigger a local storage update by way of a watcher
-    user.value = { ...user.value, Name: name };
+    user.value.Name = (await api.put(`/users/${user.value.Alias}/name`, {
+      name
+    })).data;
   }
-
 
   async function followArtist(target: string): Promise<void> {
     await api.post<{ Alias: string; Followed: Date; }>(`/users/${user.value.Alias}/followed`, {
@@ -94,7 +83,7 @@ export const useUserStore = defineStore('user', () => {
   }
 
   return {
-    user,
+    user: readonly(user),
     Register,
     SignIn,
     SignOut,

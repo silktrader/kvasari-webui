@@ -1,20 +1,31 @@
 <template>
 
   <section class='preview' @click='navigateTo(artwork.Id)'>
-    <img :alt='imgAlt' :src='imgUrl' />
+    <img :alt="`${artwork.Title ?? 'Untitled'}, by ${props.author?.Name }`" :src='imgUrl' />
     <aside class='overlay'>
 
       <section class='metadata'>
         <div class='metadata-space' />
         <span class='title'>{{ artwork.Title ?? 'Untitled' }}</span>
-        <span v-if='!!artwork.Author' class='artist'>{{ artwork.Author.Name }}</span>
+        <span v-if='showAuthor' class='artist'>{{ props.author.Name }}</span>
         <div class='metadata-space' />
         <span class='added'>added {{ formatRelativeDate(artwork.Added) }}</span>
       </section>
 
       <section class='overlay-right'>
 
-        <section class='controls'>
+        <section class='feedback'>
+          <div>
+            <q-icon name='comment' size='sm'></q-icon>
+            <span>{{ artwork.Comments }}</span>
+          </div>
+          <div>
+            <q-icon name='reviews' size='sm'></q-icon>
+            <span>{{ artwork.Reactions }}</span>
+          </div>
+        </section>
+
+        <section v-if='isUserAuthor' class='controls'>
           <q-btn icon='more_vert' outline round @click.stop>
             <q-menu>
               <q-list style='min-width: 100px'>
@@ -31,17 +42,6 @@
               </q-list>
             </q-menu>
           </q-btn>
-        </section>
-
-        <section class='feedback'>
-          <div>
-            <q-icon name='comment' size='sm'></q-icon>
-            <span>{{ artwork.Comments }}</span>
-          </div>
-          <div>
-            <q-icon name='reviews' size='sm'></q-icon>
-            <span>{{ artwork.Reactions }}</span>
-          </div>
         </section>
 
       </section>
@@ -61,10 +61,15 @@ import { useUserStore } from 'stores/user-store';
 import { ArtworkPreview } from 'src/models/artwork-preview';
 import { useArtistStore } from 'stores/artist-store';
 import { useQuasar } from 'quasar';
+import { Author } from 'src/models/author';
 
 const props = defineProps({
   artwork: {
     type: Object as PropType<ArtworkPreview>,
+    required: true
+  },
+  author: {
+    type: Object as PropType<Author>,
     required: true
   }
 });
@@ -84,7 +89,12 @@ onBeforeUnmount(() => {
   if (imgUrl.value) URL.revokeObjectURL(imgUrl.value);
 });
 
-const imgAlt = computed(() => `${props.artwork.Title ?? 'Untitled'}, by ${props.artwork.Author?.Name ?? us.user.Alias}`);
+// Determines whether the artwork's author and the viewing user match.
+// Artwork previews owned by the user lack the nullable `Author` property.
+const isUserAuthor = computed(() => props.author.Alias === us.user.Alias);
+
+// Determines whether previews should display the artwork author's full name: stream previews do, profile ones don't.
+const showAuthor = computed(() => props.author && props.author.Alias !== ars.artist.Alias);
 
 function navigateTo(artworkId: string): void {
   router.push(`/artworks/${artworkId}`);
@@ -126,8 +136,9 @@ $border-radius: 3px;
 .preview {
   cursor: pointer;
   position: relative;
-  height: 25vh;
+  height: 30vh;
   flex: 1 1 auto;
+  min-width: 180px; // enough to fit the timestamp and two icons on most screens
 }
 
 img {
@@ -161,10 +172,10 @@ img {
 
 .overlay-right {
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   height: 100%;
   justify-content: space-between;
-  align-items: end;
+  align-items: flex-end;
 }
 
 .overlay:hover {

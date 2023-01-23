@@ -3,30 +3,30 @@
 
     <q-tabs
       v-model='tab'
-      indicator-color='secondary'
       align='center'
+      indicator-color='secondary'
     >
-      <q-tab name='signin' icon='login' label='Sign In' />
-      <q-tab name='register' icon='person_add' label='Register' />
+      <q-tab icon='login' label='Sign In' name='signin' />
+      <q-tab icon='person_add' label='Register' name='register' />
     </q-tabs>
 
     <q-separator />
 
     <q-tab-panels v-model='tab' animated>
-      <q-tab-panel name='signin' class='auth-panel'>
+      <q-tab-panel class='auth-panel' name='signin'>
 
         <q-form
-          @submit='onSignIn'
-          @reset='onSignInReset'
           class='q-gutter-md signin-form'
+          @reset='onSignInReset'
+          @submit='onSignIn'
         >
           <q-input
             v-model='userAlias'
+            :rules="[ val => val && val.length > 5 || 'Invalid alias']"
             class='credentials-input'
             label='Alias'
             lazy-rules
-            standout
-            :rules="[ val => val && val.length > 5 || 'Invalid alias']">
+            standout>
             <template v-slot:prepend>
               <q-icon name='account_circle' />
             </template>
@@ -34,12 +34,12 @@
 
           <q-input
             v-model='userPassword'
+            :rules="[ val => val && val.length > 8 || 'Invalid password']"
+            :type="showPassword ? 'password' : 'text'"
             class='credentials-input'
             label='Password'
-            :type="showPassword ? 'password' : 'text'"
             lazy-rules
-            standout
-            :rules="[ val => val && val.length > 8 || 'Invalid password']">
+            standout>
             <template v-slot:append>
               <q-icon
                 v-show='userPassword'
@@ -54,29 +54,29 @@
           </q-input>
 
           <div class='form-actions'>
-            <q-btn label='Sign In' type='submit' color='accent' />
-            <q-btn label='Reset' type='reset' flat :disable='!userAlias && !userPassword' />
+            <q-btn color='accent' label='Sign In' type='submit' />
+            <q-btn :disable='!userAlias && !userPassword' flat label='Reset' type='reset' />
           </div>
 
         </q-form>
 
       </q-tab-panel>
 
-      <q-tab-panel name='register' class='auth-panel'>
+      <q-tab-panel class='auth-panel' name='register'>
         <q-form
-          @submit='onRegister'
-          @reset='onRegReset'
           class='signin-form'
+          @reset='onRegReset'
+          @submit='onRegister'
         >
           <q-input
             v-model='regData.Alias'
-            class='credentials-input'
-            label='Alias'
-            clearable
-            standout
+            :rules="[ val => !!val && val.length > 5 || 'Invalid alias']"
             bottom-slots
+            class='credentials-input'
+            clearable
+            label='Alias'
             lazy-rules
-            :rules="[ val => !!val && val.length > 5 || 'Invalid alias']">
+            standout>
             <template v-slot:prepend>
               <q-icon name='account_circle' />
             </template>
@@ -84,13 +84,13 @@
 
           <q-input
             v-model='regData.Name'
-            class='credentials-input'
-            label='Name'
-            clearable
-            standout
-            bottom-slots
-            lazy-rules
             :rules="[ val => val && val.length > 5 || 'Invalid name']"
+            bottom-slots
+            class='credentials-input'
+            clearable
+            label='Name'
+            lazy-rules
+            standout
           >
             <template v-slot:prepend>
               <q-icon name='badge' />
@@ -99,14 +99,14 @@
 
           <q-input
             v-model='regData.Email'
-            class='credentials-input'
-            label='Email'
-            type='email'
-            clearable
-            standout
-            bottom-slots
-            lazy-rules
             :rules="[ val => !!val && val.length > 4 || 'Invalid email']"
+            bottom-slots
+            class='credentials-input'
+            clearable
+            label='Email'
+            lazy-rules
+            standout
+            type='email'
           >
             <template v-slot:prepend>
               <q-icon name='mail' />
@@ -115,13 +115,13 @@
 
           <q-input
             v-model='regData.Password'
+            :rules="[ val => val && val.length > 8 || 'Invalid password']"
+            :type="showRegPassword ? 'password' : 'text'"
+            bottom-slots
             class='credentials-input'
             label='Password'
-            :type="showRegPassword ? 'password' : 'text'"
-            standout
-            bottom-slots
             lazy-rules
-            :rules="[ val => val && val.length > 8 || 'Invalid password']">
+            standout>
             <template v-slot:prepend>
               <q-icon name='lock' />
             </template>
@@ -136,8 +136,8 @@
           </q-input>
 
           <div class='form-actions'>
-            <q-btn label='Register' type='submit' color='accent' />
-            <q-btn label='Reset' type='reset' flat />
+            <q-btn color='accent' label='Register' type='submit' />
+            <q-btn flat label='Reset' type='reset' />
           </div>
 
         </q-form>
@@ -149,7 +149,7 @@
   </q-card>
 </template>
 
-<script setup lang='ts'>
+<script lang='ts' setup>
 import { reactive, ref } from 'vue';
 import { useUserStore } from 'stores/user-store';
 import { useRouter } from 'vue-router';
@@ -211,7 +211,7 @@ async function onRegister() {
       message: `Registered as <b>${regData.Alias}</b>.`,
       html: true
     });
-    await router.push('/profile');
+    await router.push('/me');
   } catch (error) {
     // no 2xx response
     if (error instanceof BadRequestError) {

@@ -7,10 +7,21 @@
         <q-btn color='accent' disable icon='comment' label='Most Commented' outline />
       </q-btn-group>
     </header>
-    <div class='previews'>
-      <artwork-preview-component v-for='artwork in ss.artworks' :key='artwork.Id' :artwork='artwork' />
-      <div class='spacer' />
-    </div>
+    <q-infinite-scroll :offset='100' class='previews' debounce='200' @load='onLoad'>
+      <artwork-preview-component v-for='artwork in ss.artworks' :key='artwork.Id' :artwork='artwork'
+                                 :author='artwork.Author' />
+
+      <!--fills the remaining flex row-->
+      <section class='spacer' />
+      <!--adds one more row-->
+      <section class='empty-preview-row'>
+        <q-btn v-if='ss.exhaustedStream' color='secondary' label='Update Stream' size='md' style='min-width: 30vw'
+               @click='update' />
+      </section>
+      <template v-slot:loading>
+        <q-spinner-dots color='primary' size='5em' />
+      </template>
+    </q-infinite-scroll>
 
   </q-page>
 
@@ -19,28 +30,37 @@
 <script lang='ts' setup>
 import { onMounted } from 'vue';
 import { useStreamStore } from 'stores/stream-store';
-import { date } from 'quasar';
-import { useRouter } from 'vue-router';
 import { useUserStore } from 'stores/user-store';
 import ArtworkPreviewComponent from 'components/ArtworkPreviewComponent.vue';
+import { useQuasar } from 'quasar';
 
-const router = useRouter();
 const ss = useStreamStore();
 const us = useUserStore();
+const q = useQuasar();
+
+const now = () => new Date().toISOString();
 
 onMounted(() => {
-  const now = new Date().toISOString();
-  ss.clearStream();
-  if (us.user) ss.updateStream(us.user.Alias, now, now);
+  ss.clear();
 });
 
-function timeAgo(datetime: Date): number {
-  return date.getDateDiff(new Date(), datetime, 'days');
+async function onLoad(index: number, done: any): Promise<void> {
+  try {
+    await ss.updateStream(us.user.Alias, ss.earliestArtworkDate);
+  } catch (e) {
+    q.notify({ type: 'negative', message: 'An error occurred while fetching new artworks.' });
+    console.error(e);
+  }
+  ss.exhaustedStream ? done(true) : done();
 }
 
-function navigateTo(artworkId: string): void {
-  // router.push({ name: 'artworks', params: { artworkId } });
-  router.push(`/artworks/${artworkId}`);
+async function update(): Promise<void> {
+  try {
+    await ss.updateStream(us.user.Alias, ss.earliestArtworkDate);
+  } catch (e) {
+    q.notify({ type: 'negative', message: 'An error occurred while updating the stream.' });
+    console.error(e);
+  }
 }
 
 </script>
@@ -71,10 +91,20 @@ $border-radius: 3px;
   padding-left: $padding;
   padding-right: $padding;
   padding-top: $toolbar-padding;
+  justify-content: center; // needed for the spinner, but potential issue
 }
 
 .spacer {
   flex-grow: 10;
+}
+
+.empty-preview-row {
+  display: flex;
+  justify-content: center;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  width: 100%;
+  height: 10vh;
 }
 
 .overlay {

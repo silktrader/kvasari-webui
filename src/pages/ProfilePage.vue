@@ -94,7 +94,7 @@
         </q-btn>
         <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.Following }}</b> Following</span>
           <q-tooltip>
-            Users whom {{ artist.Name }} is following
+            Users followed by {{ artist.Name }}
           </q-tooltip>
         </q-btn>
         <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.Artworks }}</b> Artworks</span>
@@ -150,7 +150,7 @@
           />
         </div>
 
-        <artwork-preview-component v-for='[id, artwork] in artworks' :key='id' :artwork='artwork' />
+        <artwork-preview-component v-for='[id, artwork] in artworks' :key='id' :artwork='artwork' :author='as.artist' />
 
         <div class='spacer' />
 
@@ -192,14 +192,14 @@ watch(
   toParams => {
     try {
       const alias = toParams.alias as string ?? us.user?.Alias;
+      as.clear();
       as.loadArtistData(alias);
-      as.resetArtworks();
       as.loadArtworks(alias);
     } catch (error) {
       if (error instanceof BadRequestError) {
         q.notify({
           type: 'negative',
-          message: `Couldn't update the user profile: </br><em>${error.Message}</em>.`,
+          message: `Error while updating the artist's profile: </br><em>${error.Message}</em>.`,
           html: true
         });
       } else {
