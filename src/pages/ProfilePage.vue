@@ -162,18 +162,18 @@
 
 </template>
 
-
 <script lang='ts' setup>
 import { computed, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useUserStore } from 'stores/user-store';
 import { useArtistStore } from 'stores/artist-store';
-import { BadRequestError, baseUrl, getBearerToken } from 'boot/axios';
+import { BadRequestError, baseUrl, getBearerToken, NotFoundError } from 'boot/axios';
 import ArtworkPreviewComponent from 'components/ArtworkPreviewComponent.vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 
 const route = useRoute();
+const router = useRouter();
 const as = useArtistStore();
 const us = useUserStore();
 const q = useQuasar();
@@ -189,12 +189,12 @@ const { artist, artworks } = storeToRefs(as);
 // 2. `alias` otherwise
 watch(
   () => route.params,
-  toParams => {
+  async toParams => {
     try {
       const alias = toParams.alias as string ?? us.user?.Alias;
       as.clear();
-      as.loadArtistData(alias);
-      as.loadArtworks(alias);
+      await as.loadArtistData(alias);
+      await as.loadArtworks(alias);
     } catch (error) {
       if (error instanceof BadRequestError) {
         q.notify({
@@ -202,8 +202,11 @@ watch(
           message: `Error while updating the artist's profile: </br><em>${error.Message}</em>.`,
           html: true
         });
+      } else if (error instanceof NotFoundError) {
+        q.notify({ type: 'negative', message: 'User not found or inaccessible.' });
+        window.history.state.back ? router.back() : await router.push(`/${us.user.Alias}`);
       } else {
-        q.notify({ type: 'negative', message: 'Couldn\'t update the user profile.' });
+        q.notify({ type: 'negative', message: 'A server error occurred while fetching the user profile.' });
       }
     }
   },
