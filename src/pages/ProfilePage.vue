@@ -10,6 +10,7 @@
           <img alt='User Profile Cover'
                class='user-avatar'
                src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'>
+          <q-badge v-if='artist.BlockedByUser' color='secondary' floating style='padding: 6px'>Blocked</q-badge>
         </q-avatar>
 
         <section class='user-name-alias'>
@@ -58,19 +59,24 @@
             <!-- Relevant controls when viewing another user's profile -->
             <q-btn v-if='canFollow' label='Follow' outline rounded @click='follow()'></q-btn>
             <q-btn v-else-if='canUnfollow' label='Unfollow' outline rounded @click='unfollow()'></q-btn>
-            <q-btn v-else-if='canUnblock' label='Unblock' outline rounded @click='unblock()'></q-btn>
 
             <section v-if='!isUser'>
               <q-btn flat icon='more_vert' round @click.stop>
-                <q-menu>
+                <q-menu auto-close>
                   <q-list>
-                    <q-item v-if='!canUnblock' v-close-popup v-ripple clickable @click='block'>
+                    <q-item v-if='canUnblock' v-ripple clickable @click.prevent='unblock'>
                       <q-item-section avatar>
-                        <q-icon name='block' />
+                        <q-icon name='verified_user' />
+                      </q-item-section>
+                      <q-item-section>Unblock</q-item-section>
+                    </q-item>
+                    <q-item v-else v-ripple clickable @click.prevent='block'>
+                      <q-item-section avatar>
+                        <q-icon name='remove_moderator' />
                       </q-item-section>
                       <q-item-section>Block</q-item-section>
                     </q-item>
-                    <q-item v-close-popup v-ripple clickable disable>
+                    <q-item v-ripple clickable disable>
                       <q-item-section avatar>
                         <q-icon name='report' />
                       </q-item-section>
