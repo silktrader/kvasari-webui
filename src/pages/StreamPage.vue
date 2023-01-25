@@ -74,7 +74,7 @@ onUnmounted(() => {
   ss.clear();
 });
 
-async function onLoad(index: number, done: any): Promise<void> {
+async function onLoad(index: number, done: (flag?: boolean) => void): Promise<void> {
   try {
     await ss.updateStream(us.user.Alias, ss.earliestArtworkDate);
   } catch (e) {

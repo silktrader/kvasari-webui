@@ -2,57 +2,57 @@ import { boot } from 'quasar/wrappers';
 import axios, { AxiosInstance } from 'axios';
 import { useUserStore } from 'stores/user-store';
 
-// Describes a server received bad request error; timestamps are ignored.
-export class BadRequestError {
-  constructor(public Message: string, public Timestamp: Date) {}
-}
-
-// Describes a server received internal server error; timestamps are ignored.
-export class InternalServerError {
-  constructor(public Error: string, public Timestamp: Date) {}
-}
-
-// Describes a server received not found error.
-export class NotFoundError {}
-
 declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
     $axios: AxiosInstance;
   }
 }
 
-export const baseUrl = <string>process.env.baseUrl;
+// Describes a server received bad request error; timestamps are ignored.
+class BadRequestError {
+  constructor(public Message: string, public Timestamp: Date) {}
+}
 
-// Be careful when using SSR for cross-request state pollution
-// due to creating a Singleton instance here;
-// If any client changes this (global) instance, it might be a
-// good idea to move this instance creation inside the
-// "export default () => {}" function below (which runs individually
-// for each client)
+// Describes a server received internal server error; timestamps are ignored.
+class InternalServerError {
+  constructor(public Error: string, public Timestamp: Date) {}
+}
+
+// Describes a server received not found error.
+class NotFoundError {}
+
+// Points to the base API URL, as provided in the environment variable, from `quasar.config.js`.
+const baseUrl = <string>process.env.baseUrl;
+
+// Constructs a simplistic bearer token from the authenticated user's ID.
+const getBearerToken = () => {
+  const { user } = useUserStore(); // not reactive
+  if (user) return `Bearer ${user.Id}`;
+  throw new Error('No authenticated user.');
+};
+
+// Creates a global singleton; might create issues with SSR deployments.
 const api = axios.create({
-  baseURL: baseUrl,
+  baseURL: baseUrl
   // withCredentials: true,
 });
-// tk export base url
+
 api.interceptors.request.use(
-  function (config) {
-    const us = useUserStore();
-    if (us.user) {
-      config.headers.Authorization = `Bearer ${us.user.Id}`;
-    }
+  function(config) {
+    config.headers.Authorization = getBearerToken();
     return config;
   },
-  function (error) {
+  function(error) {
     return Promise.reject(error);
   }
 );
 
 api.interceptors.response.use(
-  function (response) {
-    // Any status code that lie within the range of 2xx cause this function to trigger
+  function(response) {
+    // status codes within the range of 2xx cause this function to trigger
     return response;
   },
-  function (error) {
+  function(error) {
     // status codes outside the range of 2xx are caught here
     switch (error.response?.status) {
       case 401:
@@ -81,16 +81,13 @@ api.interceptors.response.use(
   }
 );
 
+// Helps with (unused) Options API.
 export default boot(({ app }) => {
-  // for use inside Vue files (Options API) through this.$axios and this.$api
-
+  // needed for `this.$axios` if ever used
   app.config.globalProperties.$axios = axios;
-  // ^ ^ ^ this will allow you to use this.$axios (for Vue Options API form)
-  //       so you won't necessarily have to import axios in each vue file
 
+  // needed for `this.$api` if ever used
   app.config.globalProperties.$api = api;
-  // ^ ^ ^ this will allow you to use this.$api (for Vue Options API form)
-  //       so you can easily perform requests against your app's API
 });
 
-export { api };
+export { api, baseUrl, getBearerToken, BadRequestError, InternalServerError, NotFoundError };

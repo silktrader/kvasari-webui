@@ -136,13 +136,13 @@
             :form-fields='[
               {name: "alias", value: us.user.Alias}
             ]'
-            :headers="[{name: 'Authorization', value: `Bearer ${us.user.Id}`}]"
+            :headers="[{name: 'Authorization', value: getBearerToken()}]"
             :max-file-size='maxFileSize'
+            :url='`${baseUrl}/artworks`'
             field-name='image'
             flat
             label='Upload Artwork'
             multiple
-            url='http://localhost:3000/artworks'
             @failed='onFailed'
             @finish='onFinished'
             @rejected='onRejected'
@@ -168,7 +168,7 @@ import { computed, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useUserStore } from 'stores/user-store';
 import { useArtistStore } from 'stores/artist-store';
-import { BadRequestError } from 'boot/axios';
+import { BadRequestError, baseUrl, getBearerToken } from 'boot/axios';
 import ArtworkPreviewComponent from 'components/ArtworkPreviewComponent.vue';
 import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
