@@ -37,57 +37,59 @@ const api = axios.create({
   // withCredentials: true,
 });
 
-api.interceptors.request.use(
-  function(config) {
-    config.headers.Authorization = getBearerToken();
-    return config;
-  },
-  function(error) {
-    return Promise.reject(error);
-  }
-);
-
-api.interceptors.response.use(
-  function(response) {
-    // status codes within the range of 2xx cause this function to trigger
-    return response;
-  },
-  function(error) {
-    // status codes outside the range of 2xx are caught here
-    switch (error.response?.status) {
-      case 401:
-        useUserStore().SignOut();
-        return Promise.reject(error);
-      // wrap 400 errors with a custom class for easier handling down the line
-      case 400:
-        return Promise.reject(
-          new BadRequestError(
-            error.response.data.Message,
-            error.response.data.Timestamp
-          )
-        );
-      case 404:
-        return Promise.reject(new NotFoundError());
-      case 500:
-        return Promise.reject(
-          new InternalServerError(
-            error.response.data.Error,
-            error.response.data.Timestamp
-          )
-        );
-      default:
-        return Promise.reject(error);
-    }
-  }
-);
-
 // Helps with (unused) Options API.
-export default boot(({ app }) => {
+export default boot(({ app, router }) => {
   // needed for `this.$axios` if ever used
   app.config.globalProperties.$axios = axios;
 
   // needed for `this.$api` if ever used
   app.config.globalProperties.$api = api;
+
+  api.interceptors.request.use(
+    function(config) {
+      config.headers.Authorization = getBearerToken();
+      return config;
+    },
+    function(error) {
+      return Promise.reject(error);
+    }
+  );
+
+  // interceptors are placed within the boot() to have access to the router
+  api.interceptors.response.use(
+    function(response) {
+      // status codes within the range of 2xx cause this function to trigger
+      return response;
+    },
+    function(error) {
+      // status codes outside the range of 2xx are caught here
+      switch (error.response?.status) {
+        case 401:
+          useUserStore().SignOut();
+          router.push('/authentication');
+          return Promise.reject(error);
+        // wrap 400 errors with a custom class for easier handling down the line
+        case 400:
+          return Promise.reject(
+            new BadRequestError(
+              error.response.data.Message,
+              error.response.data.Timestamp
+            )
+          );
+        case 404:
+          return Promise.reject(new NotFoundError());
+        case 500:
+          return Promise.reject(
+            new InternalServerError(
+              error.response.data.Error,
+              error.response.data.Timestamp
+            )
+          );
+        default:
+          return Promise.reject(error);
+      }
+    }
+  );
 });
 
 export { api, baseUrl, getBearerToken, BadRequestError, InternalServerError, NotFoundError };
