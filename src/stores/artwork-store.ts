@@ -84,6 +84,14 @@ export const useArtworkStore = defineStore('artwork', () => {
     reactions.value = [...reactions.value.filter(r => r.AuthorAlias !== user.Alias)];
   }
 
+  function follow(): void {
+    artwork.value.Author.FollowedByUser = true;
+  }
+
+  function unfollow(): void {
+    artwork.value.Author.FollowedByUser = false;
+  }
+
   return {
     artwork: readonly(artwork),
     comments: readonly(comments),
@@ -98,6 +106,8 @@ export const useArtworkStore = defineStore('artwork', () => {
     clear,
     getReactions,
     addReaction,
-    removeReaction
+    removeReaction,
+    follow,
+    unfollow
   };
 });

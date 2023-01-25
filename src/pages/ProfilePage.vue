@@ -485,11 +485,11 @@ $border-radius: 3px;
 }
 
 .uploader {
-  height: 25vh;
+  height: 30vh;
 }
 
 .q-uploader {
-  height: 25vh;
+  height: 30vh;
 }
 
 .spacer {

@@ -94,7 +94,8 @@
             size='xl'
           />
           <q-btn v-show='canDelete' color='negative' label='Delete' @click='removeArtwork' />
-          <q-btn v-if='canFollow' color='primary' label='Follow' outline />
+          <q-btn v-if='canFollow' color='primary' label='Follow' outline @click='follow' />
+          <q-btn v-else-if='canUnfollow' color='primary' label='Unfollow' outline @click='unfollow' />
         </section>
 
       </div>
@@ -175,6 +176,10 @@ const isOwner = computed(() => artwork.value && artwork.value.Author.Alias === u
 // Determines whether the author can be followed by the user.
 const canFollow = computed(() => !isOwner.value && !artwork.value?.Author.FollowedByUser);
 
+// Determines whether the author can be unfollowed by the user.
+const canUnfollow = computed(() => !isOwner.value && artwork.value?.Author.FollowedByUser);
+
+// Determines whether the user can delete the artwork.
 const canDelete = computed(() => isOwner.value && isEditing.value);
 
 // a valid target to scroll to
@@ -273,9 +278,49 @@ function goToArtist(): void {
   if (artwork.value) router.push(`/${artwork.value.Author.Alias}`);
 }
 
+function follow(): void {
+  try {
+    us.followArtist(artwork.value.Author.Alias);
+    as.follow();
+    q.notify({
+      type: 'positive',
+      message: `You now follow <b>${artwork.value.Author.Alias}</b>.`,
+      html: true
+    });
+  } catch (e) {
+    console.error(e);
+    q.notify({
+      type: 'negative',
+      message: `A problem arose while attempting to follow <b>${artwork.value.Author.Alias}</b>`,
+      html: true
+    });
+  }
+}
+
+function unfollow(): void {
+  try {
+    us.unfollowArtist(artwork.value.Author.Alias);
+    as.unfollow();
+    q.notify({
+      type: 'positive',
+      message: `You stopped following <b>${artwork.value.Author.Alias}</b>.`,
+      html: true
+    });
+  } catch (e) {
+    console.error(e);
+    q.notify({
+      type: 'negative',
+      message: `A problem arose while unfollowing <b>${artwork.value.Author.Alias}</b>`,
+      html: true
+    });
+  }
+}
+
 </script>
 
 <style lang='scss' scoped>
+
+@import '../css/quasar.variables.scss';
 
 .artwork-image {
   position: relative; // must set to absolute for the caption to be absolute
@@ -429,11 +474,12 @@ function goToArtist(): void {
 .user-name-alias {
   display: flex;
   flex-direction: column;
+  font-family: $text-serif;
+  font-size: large;
   text-align: center;
   margin-top: 1rem;
   margin-bottom: 2rem;
   gap: 10px;
-  font-size: medium;
 }
 
 .user-name-alias:hover {
@@ -441,7 +487,7 @@ function goToArtist(): void {
 }
 
 .artist-alias {
-  font-size: small;
+  font-size: medium;
   font-style: italic;
 }
 
@@ -475,6 +521,9 @@ function goToArtist(): void {
 
 .controls {
   height: 150px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 </style>

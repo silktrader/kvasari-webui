@@ -19,8 +19,11 @@
       <section class='spacer' />
       <!--adds one more row-->
       <section class='empty-preview-row'>
-        <q-btn v-if='ss.exhaustedStream' color='secondary' label='Update Stream' outline size='lg'
-               @click='update' />
+        <div v-if='ss.exhaustedStream' class='stream-end'>
+          <span class='stream-end-notice'>... no more artworks to display.</span>
+          <q-btn color='secondary' label='Update Stream' outline size='lg'
+                 @click='update' />
+        </div>
       </section>
       <template v-slot:loading>
         <q-spinner-dots color='primary' size='5em' />
@@ -147,6 +150,18 @@ $border-radius: 3px;
   padding-top: 32px;
   padding-bottom: 16px;
   width: 100%;
+}
+
+.stream-end {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stream-end-notice {
+  font-family: $text-serif;
+  font-style: italic;
+  font-size: large;
 }
 
 </style>

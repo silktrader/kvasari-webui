@@ -42,8 +42,7 @@ header {
   width: 100%;
   padding-top: 10px;
   height: 60px;
-  font-family: 'Lato', sans-serif;
-  // tk change above or set
+  font-family: $text-sans;
   z-index: 1; // watch out or it might cover UI elements scrolled into view
   gap: 2rem;
   padding-left: $padding;
@@ -81,10 +80,6 @@ a:hover {
   height: 100%;
   background-color: $stone-background;
 }
-
-//.q-page-container {
-//  padding-top: 0 !important;
-//}
 
 .spacer {
   flex-grow: 10;
