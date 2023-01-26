@@ -73,6 +73,8 @@
           <img alt='User Avatar'
                class='artist-avatar'
                src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'>
+          <q-badge v-if='artwork.Author.FollowsUser' class='user-avatar-badge' color='secondary' floating
+                   label='Follows You' />
         </q-avatar>
 
         <aside v-if='isOwner' class='user-name-alias' @click='goToArtist'>
@@ -469,6 +471,10 @@ function unfollow(): void {
 
 .artist-avatar {
   object-fit: cover;
+}
+
+.user-avatar-badge {
+  padding: 6px;
 }
 
 .user-name-alias {

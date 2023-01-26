@@ -17,6 +17,8 @@
       <router-view />
     </q-page-container>
 
+    <q-ajax-bar color='accent' position='top' size='8px' />
+
   </q-layout>
 </template>
 

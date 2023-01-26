@@ -10,7 +10,9 @@
           <img alt='User Profile Cover'
                class='user-avatar'
                src='https://artincontext.org/wp-content/uploads/2021/03/Famous-Self-Portraits-848x530.jpg'>
-          <q-badge v-if='artist.BlockedByUser' color='secondary' floating style='padding: 6px'>Blocked</q-badge>
+          <q-badge v-if='artist.BlockedByUser' class='user-avatar-badge' color='secondary' floating label='Blocked' />
+          <q-badge v-else-if='artist.FollowsUser' class='user-avatar-badge' color='secondary' floating
+                   label='Follows You' />
         </q-avatar>
 
         <section class='user-name-alias'>
@@ -448,6 +450,10 @@ $border-radius: 3px;
 
 .user-avatar {
   object-fit: cover;
+}
+
+.user-avatar-badge {
+  padding: 6px;
 }
 
 .user-name-alias {
