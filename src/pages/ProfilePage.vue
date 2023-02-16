@@ -105,7 +105,7 @@
             Users followed by {{ artist.Name }}
           </q-tooltip>
         </q-btn>
-        <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.Artworks }}</b> Artworks</span>
+        <q-btn flat no-caps><span class='user-stat-label'><b>{{ artist.ArtworksAdded }}</b> Artworks</span>
           <q-tooltip>
             Artworks uploaded by {{ artist.Name }}
           </q-tooltip>

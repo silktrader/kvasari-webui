@@ -16,7 +16,9 @@
                                  :author='artwork.Author' />
 
       <!--fills the remaining flex row-->
-      <section class='spacer' />
+      <section class='spacer'>
+        <span v-if='!ss.exhaustedStream' class='scroll-notice'>... scroll down for more.</span>
+      </section>
       <!--adds one more row-->
       <section class='empty-preview-row'>
         <div v-if='ss.exhaustedStream' class='stream-end'>
@@ -142,6 +144,9 @@ $border-radius: 3px;
 
 .spacer {
   flex-grow: 10;
+  display: flex;
+  margin-top: 3rem;
+  margin-left: 3rem;
 }
 
 .empty-preview-row {
@@ -159,6 +164,12 @@ $border-radius: 3px;
 }
 
 .stream-end-notice {
+  font-family: $text-serif;
+  font-style: italic;
+  font-size: large;
+}
+
+.scroll-notice {
   font-family: $text-serif;
   font-style: italic;
   font-size: large;

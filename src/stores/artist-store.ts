@@ -16,7 +16,7 @@ export interface Artist {
   Created: Date;
   Followers: number;
   Following: number;
-  Artworks: number;
+  ArtworksAdded: number;
   Reactions: number;
   Comments: number;
   FollowsUser: boolean;
@@ -96,6 +96,7 @@ export const useArtistStore = defineStore('artist', () => {
 
     // add the recently uploaded artwork to a copy of the currently displayed artworks, without sorting
     artworks.value = new Map<string, ArtworkPreview>([...newArtworks, ...artworks.value]);
+    artist.value.ArtworksAdded += 1;
   }
 
   // Carries out artwork delete requests, given IDs, while properly updating the state.
@@ -104,7 +105,7 @@ export const useArtistStore = defineStore('artist', () => {
 
     // update the state
     artworks.value.delete(artwork.Id);
-    artist.value.Artworks -= 1;
+    artist.value.ArtworksAdded -= 1;
     artist.value.Comments -= artwork.Comments;
     artist.value.Reactions -= artwork.Reactions;
   }

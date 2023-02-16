@@ -449,8 +449,11 @@ function unfollow(): void {
 // description
 
 .details-description {
-  font-family: $text-sans;
-  color: antiquewhite;
+  font-family: $text-serif;
+  //color: antiquewhite;
+  font-size: large;
+  max-width: 500px;
+  text-align: justify;
 }
 
 // meta
