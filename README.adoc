@@ -1,5 +1,5 @@
 = KVasari
-Carlo Giuseppe Tomazzoli <https://github.com/silktrader[@silktrader]>
+Silktrader <https://github.com/silktrader[@silktrader]>
 ifndef::env-github[:icons: font]
 ifdef::env-github[]
 :status:
@@ -71,24 +71,50 @@ quasar build
 
 == Demonstrations
 
+CAUTION: YouTube previews are disabled on Github, for Asciidoctor.
+
 === Authentication
 
+ifdef::env-github[]
+https://youtu.be/0QA6S0xZefU[Video]
+endif::[]
+
+ifndef::env-github[]
 video::0QA6S0xZefU[youtube]
+endif::[]
 
 === Uploads
 
+ifdef::env-github[]
+https://youtu.be/ylgu2WVefls[Video]
+endif::[]
+
+ifndef::env-github[]
 video::ylgu2WVefls[youtube]
+endif::[]
 
 === Stream
 
+ifdef::env-github[]
+https://youtu.be/IkbU-w4BxrE[Video]
+endif::[]
+
+ifndef::env-github[]
 video::IkbU-w4BxrE[youtube]
+endif::[]
 
 === Authors
 
+ifdef::env-github[]
+https://youtu.be/9PemT90wB7U[Video]
+endif::[]
+
+ifndef::env-github[]
 video::9PemT90wB7U[youtube]
+endif::[]
 
 == Copyright and License
 
-Copyright (C) 2023-present Carlo Giuseppe Tomazzoli.
+Copyright (C) 2023-present, Silktrader.
 
 Use of this software is granted under the terms of the *GPLv3 License*.
