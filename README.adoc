@@ -69,6 +69,10 @@ npm run format
 quasar build
 ```
 
+=== Docker
+
+Run `docker run --name kvasari-spa -u 1000:1000 -d -p 8080:80 kvasari-spa` and fill in the adequate user ID and port to serve from.
+
 == Demonstrations
 
 CAUTION: YouTube previews are disabled on Github, for Asciidoctor.
