@@ -71,7 +71,21 @@ quasar build
 
 == Demonstrations
 
+=== Authentication
 
+video::0QA6S0xZefU[youtube]
+
+=== Uploads
+
+video::ylgu2WVefls[youtube]
+
+=== Stream
+
+video::IkbU-w4BxrE[youtube]
+
+=== Authors
+
+video::9PemT90wB7U[youtube]
 
 == Copyright and License
 
