@@ -529,7 +529,7 @@ function unfollow(): void {
 }
 
 .controls {
-  height: 150px;
+  //height: 150px; // makes room for edit controls
   width: 100%;
   display: flex;
   flex-direction: column;

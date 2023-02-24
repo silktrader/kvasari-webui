@@ -1,0 +1,80 @@
+= KVasari
+Carlo Giuseppe Tomazzoli <https://github.com/silktrader[@silktrader]>
+ifndef::env-github[:icons: font]
+ifdef::env-github[]
+:status:
+:caution-caption: :fire:
+:important-caption: :exclamation:
+:note-caption: :paperclip:
+:tip-caption: :bulb:
+:warning-caption: :warning:
+endif::[]
+
+KVasari serves the narcissistic needs of visual artists, allowing them to upload their artwork, as well as receive and formulate feedback.
+
+This repository contains the frontend, developed with Vue and Quasar. Refer to https://github.com/silktrader/kvasari for the backend's counterpart.
+
+== Features
+
+Users can *add, remove and edit their artworks*, along with their metadata.
+
+Artists can edit basic details about their creative selves, *comment* others` artworks in textual form, or leave *graphical reactions*.
+
+Additionally, the application's participants can *follow* their peers, or possibly *ban* them from interactions.
+
+A convenient *stream of paginated artworks* conceived by followed peers is equally available.
+
+== Development
+
+=== Requirements
+
+* https://vuejs.org/[Vue.js 3], with the *Composition API*
+* https://vuejs.org/guide/typescript/overview.html[Typescript]
+* https://pinia.vuejs.org/[Pinia]
+* https://quasar.dev/[Quasar]
+* https://github.com/axios/axios[Axios]
+
+=== Installing dependencies
+```bash
+yarn
+# or
+npm install
+```
+
+=== Serving the app in development mode
+```bash
+quasar dev
+```
+
+Alternatively, run `npm run dev` and grab a ☕.
+
+NOTE: Enables hot-code reloading and error reporting.
+
+=== Linting
+```bash
+yarn lint
+# or
+npm run lint
+```
+
+=== Formatting
+```bash
+yarn format
+# or
+npm run format
+```
+
+=== Building
+```bash
+quasar build
+```
+
+== Demonstrations
+
+
+
+== Copyright and License
+
+Copyright (C) 2023-present Carlo Giuseppe Tomazzoli.
+
+Use of this software is granted under the terms of the *GPLv3 License*.
